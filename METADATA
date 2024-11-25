@@ -1,0 +1,16 @@
+name: "Crashpad"
+description:
+    "Crashpad is a crash-reporting system."
+
+third_party {
+homepage: "https://chromium.googlesource.com/crashpad/crashpad/+/main/"
+  identifier {
+    type: "Git"
+    value: "https://chromium.googlesource.com/crashpad/crashpad"
+    primary_source: true
+    version: "0.8.0"
+  }
+  version: "0.8.0"
+  last_upgrade_date { year: 2024 month: 11 day: 25 }
+  license_type: NOTICE
+}
