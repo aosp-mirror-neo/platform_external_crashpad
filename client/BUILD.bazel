@@ -1,0 +1,245 @@
+# Copyright 2024 - The Android Open Source Project
+#
+# Licensed under the Apache License, Version 2.0 (the',  help='License');
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an',  help='AS IS' BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+load("//:copts.bzl", "CRASHPAD_COMMON_COPTS", "collect_plugins")
+
+licenses(["notice"])
+
+package(
+    default_visibility = [
+        "//:__subpackages__",
+        "//:clients",
+    ],
+)
+
+cc_library(
+    name = "common_apple_hdrs",
+    hdrs = [
+        "crash_report_database.h",
+        "settings.h",
+    ],
+    include_prefix = "client",
+)
+
+objc_library(
+    name = "common_apple",
+    srcs = [
+        "crash_report_database_mac.mm",
+    ],
+    copts = CRASHPAD_COMMON_COPTS + [
+        "-fobjc-call-cxx-cdtors",
+    ],
+    deps = [
+        ":common_apple_hdrs",
+        "//third_party/mini_chromium:base",
+        "//util",
+    ],
+    alwayslink = False,
+)
+
+cc_library(
+    name = "common_hdrs",
+    hdrs = [
+        "annotation.h",
+        "annotation_list.h",
+        "crash_report_database.h",
+        "crashpad_info.h",
+        "length_delimited_ring_buffer.h",
+        "ring_buffer_annotation.h",
+        "settings.h",
+        "simple_address_range_bag.h",
+        "simple_string_dictionary.h",
+    ],
+    include_prefix = "client",
+)
+
+cc_library(
+    name = "common",
+    srcs = [
+        "annotation.cc",
+        "annotation_list.cc",
+        "crash_report_database.cc",
+        "crashpad_info.cc",
+        "settings.cc",
+    ] + select({
+        "@platforms//os:linux": [
+            "crash_report_database_generic.cc",
+            "crashpad_info_note.S",
+        ],
+        "@platforms//os:windows": ["crash_report_database_win.cc"],
+        "//conditions:default": [],
+    }),
+    hdrs = [
+        "annotation.h",
+        "annotation_list.h",
+        "crash_report_database.h",
+        "crashpad_info.h",
+        "settings.h",
+        "simple_address_range_bag.h",
+        "simple_string_dictionary.h",
+    ],
+    copts = CRASHPAD_COMMON_COPTS + select({
+        "@platforms//os:linux": [
+            "-Wno-class-memaccess",
+        ],
+        "//conditions:default": [],
+    }),
+    deps = [
+        ":common_hdrs",
+        "//compat",
+        "//third_party/mini_chromium:base",
+        "//util",
+    ] + select({
+        "@platforms//os:osx": [":common_apple"],
+        "//conditions:default": [],
+    }),
+)
+
+cc_test(
+    name = "ring_buffer_annotation_load_test",
+    srcs = ["ring_buffer_annotation_load_test_main.cc"],
+    deps = [
+        ":client",
+        "//tools:tool_support",
+    ],
+)
+
+cc_library(
+    name = "client",
+    srcs = [
+        "prune_crash_reports.cc",
+    ] + select({
+        "@platforms//os:osx": [
+            "crashpad_client_mac.cc",
+            "simulate_crash_mac.cc",
+            "simulate_crash_mac.h",
+        ],
+        "@platforms//os:linux": [
+            "client_argv_handling.cc",
+            "client_argv_handling.h",
+            "crashpad_client_linux.cc",
+            "simulate_crash_linux.h",
+        ],
+        "@platforms//os:windows": [
+            "crashpad_client_win.cc",
+            "simulate_crash_win.h",
+        ],
+        "//conditions:default": [
+        ],
+    }),
+    hdrs = [
+        "annotation.h",
+        "annotation_list.h",
+        "crash_report_database.h",
+        "crashpad_client.h",
+        "crashpad_info.h",
+        "prune_crash_reports.h",
+        "settings.h",
+        "simple_address_range_bag.h",
+        "simple_string_dictionary.h",
+        "simulate_crash.h",
+    ] + select({
+        "//conditions:default": [],
+    }),
+    copts = CRASHPAD_COMMON_COPTS,
+    linkopts = select({
+        "@platforms//os:windows": ["-defaultlib:rpcrt4.lib"],
+        "//conditions:default": ["-pthread"],
+    }),
+    deps = [
+        ":common",
+        "//:internal",
+        "//compat",
+        "//third_party/mini_chromium:base",
+        "//util",
+    ] + select({
+        "@platforms//os:linux": [
+            "//third_party/lss",
+        ],
+        "//conditions:default": [],
+    }),
+)
+
+cc_library(
+    name = "pthread_create",
+    srcs = ["pthread_create_linux.cc"],
+    target_compatible_with = [
+        "@platforms//os:linux",
+    ],
+    deps = [
+        ":client",
+        "//third_party/mini_chromium:base",
+        "//util:no_cfi_icall",
+    ],
+)
+
+collect_plugins(
+    name = "plugins",
+    output_dir = ".",
+    plugins = [
+        "//handler:crashpad_handler",
+    ],
+)
+
+collect_plugins(
+    name = "plugins_win",
+    output_dir = ".",
+    plugins = [
+        "//handler:crashpad_handler.com",
+    ],
+)
+
+cc_test(
+    name = "crashpad_client_test",
+    srcs = [
+        "annotation_list_test.cc",
+        "annotation_test.cc",
+        "crash_report_database_test.cc",
+        "crashpad_info_test.cc",
+        "length_delimited_ring_buffer_test.cc",
+        "prune_crash_reports_test.cc",
+        "ring_buffer_annotation_test.cc",
+        "settings_test.cc",
+        "simple_address_range_bag_test.cc",
+        "simple_string_dictionary_test.cc",
+    ] + select({
+        "@platforms//os:linux": ["crashpad_client_linux_test.cc"],
+        "@platforms//os:osx": ["simulate_crash_mac_test.cc"],
+        "@platforms//os:windows": ["crashpad_client_win_test.cc"],
+        "//conditions:default": [],
+    }),
+    copts = CRASHPAD_COMMON_COPTS,
+    data = [
+        ":plugins",
+    ] + select({
+        "@platforms//os:windows": [":plugins_win"],
+        "//conditions:default": [],
+    }),
+    linkopts = select({
+        "@platforms//os:windows": ["-defaultlib:shell32.lib"],
+        "//conditions:default": [],
+    }),
+    # We will not be able to retrieve proper process info on linux in a sandboxed environment
+    # causing test failures.
+    tags = ["no-sandbox"],
+    deps = [
+        ":client",
+        "//compat",
+        "//snapshot",
+        "//test",
+        "//test:googletest_main",
+        "//third_party/mini_chromium:base",
+        "//util",
+        "@com_google_googletest//:gtest",
+    ],
+)

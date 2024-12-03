@@ -1,0 +1,66 @@
+load("//:copts.bzl", "CRASHPAD_COMMON_COPTS")
+
+licenses(["notice"])
+
+package(
+    default_visibility = [
+        "//:__subpackages__",
+        "//:clients",
+    ],
+)
+
+cc_library(
+    name = "crashpad_wer_handler",
+    srcs = [
+        "crashpad_wer.cc",
+    ],
+    hdrs = [
+        "crashpad_wer.h",
+    ],
+    copts = CRASHPAD_COMMON_COPTS,
+    target_compatible_with = [
+        "@platforms//os:windows",
+    ],
+    deps = [
+        "//:internal",
+        "//util",
+    ],
+)
+
+cc_binary(
+    name = "crashpad_wer.dll",
+    srcs = [
+        "crashpad_wer_main.cc",
+    ],
+    copts = CRASHPAD_COMMON_COPTS,
+    linkopts = ["/DLL"],
+    linkshared = True,
+    target_compatible_with = [
+        "@platforms//os:windows",
+    ],
+    win_def_file = "crashpad_wer.def",
+    deps = [
+        ":crashpad_wer_handler",
+    ],
+)
+
+cc_test(
+    name = "crashpad_wer_test",
+    srcs = [
+        "crashpad_wer_module_unittest.cc",
+    ],
+    copts = CRASHPAD_COMMON_COPTS,
+    data = [
+        ":crashpad_wer.dll",
+    ],
+    target_compatible_with = [
+        "@platforms//os:windows",
+    ],
+    deps = [
+        "//:internal",
+        "//client",
+        "//test",
+        "//test:googlemock_main",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

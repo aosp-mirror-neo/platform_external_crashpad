@@ -1,0 +1,125 @@
+# Copyright 2024 - The Android Open Source Project
+#
+# Licensed under the Apache License, Version 2.0 (the',  help='License');
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an',  help='AS IS' BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+licenses(["notice"])
+
+package(
+    default_visibility = [
+        "//:__subpackages__",
+    ],
+)
+
+COMPAT_LINUX_SOURCES = [
+    "linux/sys/mman_memfd_create.cc",
+]
+
+COMPAT_LINUX_HEADERS = [
+    "linux/signal.h",
+    "linux/sys/mman.h",
+    "linux/sys/ptrace.h",
+    "linux/sys/user.h",
+]
+
+COMPAT_APPLE_HEADERS = [
+    "mac/Availability.h",
+    "mac/AvailabilityVersions.h",
+    "mac/kern/exc_resource.h",
+    "mac/mach/mach.h",
+    "mac/mach-o/loader.h",
+    "mac/sys/resource.h",
+]
+
+COMPAT_MAC_SOURCES = [
+]
+
+COMPAT_MAC_HEADERS = [
+    "mac/mach/i386/thread_state.h",
+]
+
+COMPAT_NONMAC_SOURCES = [
+]
+
+COMPAT_NONMAC_HEADERS = [
+    "non_mac/mach/mach.h",
+]
+
+COMPAT_WINDOWS_SOURCES = [
+    "win/strings.cc",
+    "win/time.cc",
+]
+
+COMPAT_WINDOWS_HEADERS = [
+    "win/getopt.h",
+    "win/strings.h",
+    "win/sys/time.h",
+    "win/sys/types.h",
+    "win/time.h",
+    "win/winbase.h",
+    "win/winnt.h",
+    "win/winternl.h",
+]
+
+COMPAT_NONWIN_SOURCES = [
+    "non_win/minwinbase.h",
+    "non_win/timezoneapi.h",
+    "non_win/verrsrc.h",
+]
+
+COMPAT_NONWIN_HEADERS = [
+    "non_win/dbghelp.h",
+    "non_win/windows.h",
+    "non_win/winnt.h",
+]
+
+cc_library(
+    name = "compat",
+    srcs = select({
+        "@platforms//os:macos": COMPAT_MAC_SOURCES +
+                                COMPAT_NONWIN_SOURCES,
+        "@platforms//os:windows": COMPAT_WINDOWS_SOURCES + COMPAT_NONMAC_SOURCES,
+        "@platforms//os:linux": COMPAT_LINUX_SOURCES +
+                                COMPAT_NONMAC_SOURCES + COMPAT_NONWIN_SOURCES,
+    }),
+    hdrs = select({
+        "@platforms//os:macos": COMPAT_APPLE_HEADERS + COMPAT_MAC_HEADERS +
+                                COMPAT_NONWIN_HEADERS,
+        "@platforms//os:linux": COMPAT_LINUX_HEADERS +
+                                COMPAT_NONMAC_HEADERS + COMPAT_NONWIN_HEADERS,
+        "@platforms//os:windows": COMPAT_WINDOWS_HEADERS + COMPAT_NONWIN_HEADERS,
+    }),
+    includes =
+        select(
+            {
+                "@platforms//os:macos": ["non_win"],
+                "@platforms//os:windows": [
+                    "non_mac",
+                    "win",
+                ],
+                "@platforms//os:linux": [
+                    "linux",
+                    "non_mac",
+                    "non_win",
+                ],
+            },
+        ),
+    linkopts =
+        select({
+            "@platforms//os:windows": [],
+            "//conditions:default": ["-ldl"],
+        }),
+    deps = [
+        "//:internal",
+        "//third_party/mini_chromium:base",
+        "//util:no_cfi_icall",
+    ],
+)

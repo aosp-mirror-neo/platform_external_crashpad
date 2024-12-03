@@ -1,0 +1,798 @@
+# Copyright 2024 - The Android Open Source Project
+#
+# Licensed under the Apache License, Version 2.0 (the',  help='License');
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an',  help='AS IS' BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+load("//:copts.bzl", "CRASHPAD_COMMON_COPTS", "cc_crashpad_test_module")
+load("mig.bzl", "mig")
+
+licenses(["notice"])
+
+package(
+    default_visibility = [
+        "//:__subpackages__",
+        "//:clients",
+    ],
+)
+
+py_binary(
+    name = "mig_fix",
+    srcs = [
+        "mach/mig.py",
+        "mach/mig_fix.py",
+        "mach/mig_gen.py",
+    ],
+    imports = ["mach"],
+    python_version = "PY3",
+)
+
+mig(
+    name = "mac_mig_gen",
+    srcs = [
+        "mach/child_port.defs",
+    ],
+    sdk_srcs = [
+        "/usr/include/mach/exc.defs",
+        "/usr/include/mach/mach_exc.defs",
+        "/usr/include/mach/notify.defs",
+    ],
+)
+
+cc_library(
+    name = "apple_mig_hdrs",
+    hdrs = [
+        "mach/child_port_types.h",
+    ],
+    include_prefix = "util",
+    visibility = ["//visibility:private"],
+)
+
+cc_library(
+    name = "apple_mig",
+    srcs = [
+        ":mac_mig_gen",
+    ],
+    hdrs = [
+        "mach/child_port_types.h",
+        ":mac_mig_gen",
+    ],
+    include_prefix = "util/mach",
+    visibility = ["//visibility:public"],
+    deps = [":apple_mig_hdrs"],
+)
+
+CRASHPAD_UTIL_SOURCES = [
+    "file/delimited_file_reader.cc",
+    "file/file_helper.cc",
+    "file/file_io.cc",
+    "file/file_reader.cc",
+    "file/file_seeker.cc",
+    "file/file_seeker.h",
+    "file/file_writer.cc",
+    "file/output_stream_file_writer.cc",
+    "file/scoped_remove_file.cc",
+    "file/string_file.cc",
+    "misc/initialization_state_dcheck.cc",
+    "misc/lexing.cc",
+    "misc/lexing.h",
+    "misc/metrics.cc",
+    "misc/pdb_structures.cc",
+    "misc/random_string.cc",
+    "misc/range_set.cc",
+    "misc/reinterpret_bytes.cc",
+    "misc/scoped_forbid_return.cc",
+    "misc/symbolic_constants_common.h",
+    "misc/time.cc",
+    "misc/uuid.cc",
+    "misc/zlib.cc",
+    "net/http_body.cc",
+    "net/http_body_gzip.cc",
+    "net/http_multipart_builder.cc",
+    "net/http_transport.cc",
+    "net/url.cc",
+    "numeric/checked_address_range.cc",
+    "process/process_memory.cc",
+    "process/process_memory_range.cc",
+    "stdlib/aligned_allocator.cc",
+    "stdlib/string_number_conversion.cc",
+    "stdlib/strlcpy.cc",
+    "stdlib/strnlen.cc",
+    "stream/base94_output_stream.cc",
+    "stream/file_encoder.cc",
+    "stream/file_output_stream.cc",
+    "stream/log_output_stream.cc",
+    "stream/zlib_output_stream.cc",
+    "string/split_string.cc",
+    "thread/thread.cc",
+    "thread/thread_log_messages.cc",
+    "thread/worker_thread.cc",
+]
+
+CRASHPAD_UTIL_HEADERS = [
+    "file/delimited_file_reader.h",
+    "file/directory_reader.h",
+    "file/file_helper.h",
+    "file/file_io.h",
+    "file/file_reader.h",
+    "file/file_writer.h",
+    "file/filesystem.h",
+    "file/output_stream_file_writer.h",
+    "file/scoped_remove_file.h",
+    "file/string_file.h",
+    "misc/address_sanitizer.h",
+    "misc/address_types.h",
+    "misc/arm64_pac_bti.S",
+    "misc/arraysize.h",
+    "misc/as_underlying_type.h",
+    "misc/capture_context.h",
+    "misc/clock.h",
+    "misc/elf_note_types.h",
+    "misc/from_pointer_cast.h",
+    "misc/implicit_cast.h",
+    "misc/initialization_state.h",
+    "misc/initialization_state_dcheck.h",
+    "misc/memory_sanitizer.h",
+    "misc/metrics.h",
+    "misc/paths.h",
+    "misc/pdb_structures.h",
+    "misc/random_string.h",
+    "misc/range_set.h",
+    "misc/reinterpret_bytes.h",
+    "misc/scoped_forbid_return.h",
+    "misc/time.h",
+    "misc/tri_state.h",
+    "misc/uuid.h",
+    "misc/zlib.h",
+    "net/http_body.h",
+    "net/http_body_gzip.h",
+    "net/http_headers.h",
+    "net/http_multipart_builder.h",
+    "net/http_transport.h",
+    "net/url.h",
+    "numeric/checked_address_range.h",
+    "numeric/checked_range.h",
+    "numeric/checked_vm_address_range.h",
+    "numeric/in_range_cast.h",
+    "numeric/int128.h",
+    "numeric/safe_assignment.h",
+    "process/process_id.h",
+    "process/process_memory.h",
+    "process/process_memory_native.h",
+    "process/process_memory_range.h",
+    "stdlib/aligned_allocator.h",
+    "stdlib/map_insert.h",
+    "stdlib/string_number_conversion.h",
+    "stdlib/strlcpy.h",
+    "stdlib/strnlen.h",
+    "stdlib/thread_safe_vector.h",
+    "stream/base94_output_stream.h",
+    "stream/file_encoder.h",
+    "stream/file_output_stream.h",
+    "stream/log_output_stream.h",
+    "stream/output_stream_interface.h",
+    "stream/zlib_output_stream.h",
+    "string/split_string.h",
+    "synchronization/semaphore.h",
+    "synchronization/scoped_spin_guard.h",
+    "thread/stoppable.h",
+    "thread/thread.h",
+    "thread/thread_log_messages.h",
+    "thread/worker_thread.h",
+]
+
+CRASHPAD_UTIL_WINDOWS_SOURCES = [
+    "file/directory_reader_win.cc",
+    "file/file_io_win.cc",
+    "file/filesystem_win.cc",
+    "misc/clock_win.cc",
+    "misc/paths_win.cc",
+    "misc/time_win.cc",
+    "process/process_memory_win.cc",
+    "process/process_memory_win.h",
+    "synchronization/semaphore_win.cc",
+    "thread/thread_win.cc",
+    "win/address_types.h",
+    "win/checked_win_address_range.h",
+    "win/command_line.cc",
+    "win/command_line.h",
+    "win/context_wrappers.h",
+    "win/critical_section_with_debug_info.cc",
+    "win/critical_section_with_debug_info.h",
+    "win/exception_codes.h",
+    "win/exception_handler_server.cc",
+    "win/exception_handler_server.h",
+    "win/get_function.cc",
+    "win/get_function.h",
+    "win/get_module_information.cc",
+    "win/get_module_information.h",
+    "win/handle.cc",
+    "win/handle.h",
+    "win/initial_client_data.cc",
+    "win/initial_client_data.h",
+    "win/loader_lock.cc",
+    "win/loader_lock.h",
+    "win/module_version.cc",
+    "win/module_version.h",
+    "win/nt_internals.cc",
+    "win/nt_internals.h",
+    "win/ntstatus_logging.cc",
+    "win/ntstatus_logging.h",
+    "win/process_info.cc",
+    "win/process_info.h",
+    "win/process_structs.h",
+    "win/registration_protocol_win.cc",
+    "win/registration_protocol_win.h",
+    "win/registration_protocol_win_structs.h",
+    "win/safe_terminate_process.h",
+    "win/scoped_handle.cc",
+    "win/scoped_handle.h",
+    "win/scoped_local_alloc.cc",
+    "win/scoped_local_alloc.h",
+    "win/scoped_process_suspend.cc",
+    "win/scoped_process_suspend.h",
+    "win/scoped_registry_key.h",
+    "win/scoped_set_event.cc",
+    "win/scoped_set_event.h",
+    "win/session_end_watcher.cc",
+    "win/session_end_watcher.h",
+    "win/termination_codes.h",
+    "win/traits.h",
+    "win/xp_compat.h",
+]
+
+CRASPHAD_UTIL_WINDOWS_ASM = [
+    "misc/capture_context_win.asm",
+    "win/safe_terminate_process.asm",
+]
+
+CRASHPAD_UTIL_WINDOWS_HEADERS = [
+    "win/address_types.h",
+    "win/registration_protocol_win_structs.h",
+]
+
+CRASHPAD_UTIL_LINUX_SOURCES = [
+    "linux/pac_helper.cc",
+    "linux/auxiliary_vector.cc",
+    "linux/checked_linux_address_range.h",
+    "linux/direct_ptrace_connection.cc",
+    "linux/exception_handler_client.cc",
+    "linux/exception_handler_protocol.cc",
+    "linux/memory_map.cc",
+    "linux/proc_stat_reader.cc",
+    "linux/proc_task_reader.cc",
+    "linux/ptrace_broker.cc",
+    "linux/ptrace_client.cc",
+    "linux/ptracer.cc",
+    "linux/scoped_pr_set_dumpable.cc",
+    "linux/scoped_pr_set_ptracer.cc",
+    "linux/scoped_ptrace_attach.cc",
+    "linux/socket.cc",
+    "linux/thread_info.cc",
+    "misc/capture_context_linux.S",
+    "misc/paths_linux.cc",
+    "misc/time_linux.cc",
+    "net/http_transport_socket.cc",
+    "posix/process_info_linux.cc",
+    "process/process_memory_linux.cc",
+    "process/process_memory_sanitized.cc",
+]
+
+CRASHPAD_UTIL_LINUX_HEADERS = [
+    "linux/address_types.h",
+    "linux/auxiliary_vector.h",
+    "linux/direct_ptrace_connection.h",
+    "linux/exception_handler_client.h",
+    "linux/exception_handler_protocol.h",
+    "linux/exception_information.h",
+    "linux/memory_map.h",
+    "linux/proc_stat_reader.h",
+    "linux/proc_task_reader.h",
+    "linux/ptrace_broker.h",
+    "linux/ptrace_client.h",
+    "linux/ptrace_connection.h",
+    "linux/ptracer.h",
+    "linux/scoped_pr_set_dumpable.h",
+    "linux/scoped_pr_set_ptracer.h",
+    "linux/scoped_ptrace_attach.h",
+    "linux/socket.h",
+    "linux/thread_info.h",
+    "linux/traits.h",
+    "process/process_memory_linux.h",
+    "process/process_memory_sanitized.h",
+    "linux/pac_helper.h",
+]
+
+CRASHPAD_UTIL_MACOS_HEADERS = [
+    "process/process_memory_mac.h",
+    "ios/ios_intermediate_dump_format.h",
+    "ios/scoped_background_task.h",
+]
+
+CRASHPAD_UTIL_POSIX_SOURCES = [
+    "file/directory_reader_posix.cc",
+    "file/file_io_posix.cc",
+    "file/filesystem_posix.cc",
+    "misc/clock_posix.cc",
+    "posix/close_multiple.cc",
+    "posix/close_stdio.cc",
+    "posix/drop_privileges.cc",
+    "posix/scoped_dir.cc",
+    "posix/scoped_mmap.cc",
+    "posix/signals.cc",
+    "posix/spawn_subprocess.cc",
+    "posix/symbolic_constants_posix.cc",
+    "synchronization/semaphore_posix.cc",
+    "thread/thread_posix.cc",
+]
+
+CRASHPAD_UTIL_POSIX_HEADERS = [
+    "posix/close_multiple.h",
+    "posix/close_stdio.h",
+    "posix/drop_privileges.h",
+    "posix/process_info.h",
+    "posix/scoped_dir.h",
+    "posix/scoped_mmap.h",
+    "posix/signals.h",
+    "posix/spawn_subprocess.h",
+    "posix/symbolic_constants_posix.h",
+]
+
+CRASHPAD_UTIL_MACOS_SOURCES = [
+    "mac/sysctl.cc",
+    "mac/sysctl.h",
+    "mac/xattr.cc",
+    "mac/xattr.h",
+    "mach/composite_mach_message_server.cc",
+    "mach/composite_mach_message_server.h",
+    "mach/exc_client_variants.cc",
+    "mach/exc_client_variants.h",
+    "mach/exc_server_variants.cc",
+    "mach/exc_server_variants.h",
+    "mach/exception_behaviors.cc",
+    "mach/exception_behaviors.h",
+    "mach/exception_ports.cc",
+    "mach/exception_ports.h",
+    "mach/mach_extensions.cc",
+    "mach/mach_extensions.h",
+    "mach/mach_message.cc",
+    "mach/mach_message.h",
+    "mach/mach_message_server.cc",
+    "mach/mach_message_server.h",
+    "mach/symbolic_constants_mach.cc",
+    "mach/symbolic_constants_mach.h",
+    "misc/capture_context_mac.S",
+    "misc/clock_mac.cc",
+    "misc/paths_mac.cc",
+    "synchronization/semaphore_mac.cc",
+    "mac/checked_mach_address_range.h",
+    "mac/launchd.h",
+    "mac/mac_util.cc",
+    "mac/mac_util.h",
+    "mac/service_management.cc",
+    "mac/service_management.h",
+    "mach/bootstrap.cc",
+    "mach/bootstrap.h",
+    "mach/child_port_handshake.cc",
+    "mach/child_port_handshake.h",
+    "mach/child_port_server.cc",
+    "mach/child_port_server.h",
+    "mach/child_port_types.h",
+    "mach/exception_types.cc",
+    "mach/exception_types.h",
+    "mach/notify_server.cc",
+    "mach/notify_server.h",
+    "mach/scoped_task_suspend.cc",
+    "mach/scoped_task_suspend.h",
+    "mach/task_for_pid.cc",
+    "mach/task_for_pid.h",
+    "posix/process_info_mac.cc",
+    "process/process_memory_mac.cc",
+    "process/process_memory_mac.h",
+]
+
+# This exists as a separate target from util so that compat may depend on it
+# without cycles.
+cc_library(
+    name = "no_cfi_icall",
+    hdrs = ["misc/no_cfi_icall.h"],
+    copts = CRASHPAD_COMMON_COPTS + ["-Wno-attributes"],
+    deps = ["//third_party/mini_chromium:base"],
+)
+
+cc_library(
+    name = "util_win",
+    srcs = CRASPHAD_UTIL_WINDOWS_ASM,
+)
+
+cc_library(
+    name = "util",
+    srcs = CRASHPAD_UTIL_SOURCES +
+           select({
+               "@platforms//os:macos": CRASHPAD_UTIL_POSIX_SOURCES + CRASHPAD_UTIL_MACOS_SOURCES,
+               "@platforms//os:windows": CRASHPAD_UTIL_WINDOWS_SOURCES + CRASPHAD_UTIL_WINDOWS_ASM,
+               "@platforms//os:linux": CRASHPAD_UTIL_LINUX_SOURCES +
+                                       CRASHPAD_UTIL_POSIX_SOURCES,
+           }),
+    hdrs = CRASHPAD_UTIL_HEADERS +
+           select({
+               "@platforms//os:macos": CRASHPAD_UTIL_MACOS_HEADERS + CRASHPAD_UTIL_POSIX_HEADERS,
+               "@platforms//os:windows": CRASHPAD_UTIL_WINDOWS_HEADERS,
+               "@platforms//os:linux": CRASHPAD_UTIL_LINUX_HEADERS +
+                                       CRASHPAD_UTIL_POSIX_HEADERS,
+           }),
+    copts = CRASHPAD_COMMON_COPTS + [
+        "-DZLIB_CONST",
+    ] + select({
+        "@platforms//os:linux": [
+            "-Wno-dangling-else",
+            "-Wno-vla",
+        ],
+        "@platforms//os:macos": [
+            "-Wno-deprecated-declarations",
+            "-Wno-vla",
+        ],
+        "@platforms//os:windows": [],
+        "//conditions:default": [],
+    }),
+    include_prefix = "util",
+    linkopts = select({
+        "@platforms//os:linux": [],
+        "@platforms//os:macos": [
+            "-framework CoreFoundation",
+            "-framework Foundation",
+            "-framework IOKit",
+        ],
+        "@platforms//os:windows": [
+            "-defaultlib:user32.lib",
+            "-defaultlib:winhttp.lib",
+            "-defaultlib:version.lib",
+        ],
+        "//conditions:default": [],
+    }),
+    deps = [
+        ":no_cfi_icall",
+        "//:internal",
+        "//compat",
+        "//:zlib",
+        # "//third_party/lss",
+        # "//third_party/zlib",
+        "//third_party/mini_chromium:base",
+    ] + select({
+        "@platforms//os:linux": ["//third_party/lss"],
+        "@platforms//os:macos": [":apple_mig"],
+        "@platforms//os:windows": [],
+        "//conditions:default": [],
+    }),
+)
+
+cc_library(
+    name = "exception_handler_server",
+    srcs = select({
+        "//conditions:default": [],
+    }),
+    copts = CRASHPAD_COMMON_COPTS,
+    linkopts = select({
+        "//conditions:default": [],
+    }),
+    deps = [
+        ":util",
+        "//:internal",
+        "//minidump",
+    ],
+)
+
+CRASHPAD_UTIL_TEST_SOURCES = [
+    "file/delimited_file_reader_test.cc",
+    "file/directory_reader_test.cc",
+    "file/file_io_test.cc",
+    "file/file_reader_test.cc",
+    "file/filesystem_test.cc",
+    "file/string_file_test.cc",
+    "misc/arraysize_test.cc",
+    "misc/capture_context_test.cc",
+    "misc/capture_context_test_util.h",
+    "misc/clock_test.cc",
+    "misc/from_pointer_cast_test.cc",
+    "misc/initialization_state_dcheck_test.cc",
+    "misc/initialization_state_test.cc",
+    "misc/no_cfi_icall_test.cc",
+    "misc/paths_test.cc",
+    "misc/random_string_test.cc",
+    "misc/range_set_test.cc",
+    "misc/reinterpret_bytes_test.cc",
+    "misc/scoped_forbid_return_test.cc",
+    "misc/time_test.cc",
+    "misc/uuid_test.cc",
+    "net/http_body_gzip_test.cc",
+    "net/http_body_test.cc",
+    "net/http_body_test_util.cc",
+    "net/http_body_test_util.h",
+    "net/http_multipart_builder_test.cc",
+    "net/http_transport_test.cc",
+    "net/url_test.cc",
+    "numeric/checked_address_range_test.cc",
+    "numeric/checked_range_test.cc",
+    "numeric/in_range_cast_test.cc",
+    "numeric/int128_test.cc",
+    "stdlib/aligned_allocator_test.cc",
+    "stdlib/map_insert_test.cc",
+    "stdlib/string_number_conversion_test.cc",
+    "stdlib/strlcpy_test.cc",
+    "stdlib/strnlen_test.cc",
+    "stdlib/thread_safe_vector_test.cc",
+    "stream/base94_output_stream_test.cc",
+    "stream/file_encoder_test.cc",
+    "stream/log_output_stream_test.cc",
+    "stream/test_output_stream.cc",
+    "stream/test_output_stream.h",
+    "stream/zlib_output_stream_test.cc",
+    "string/split_string_test.cc",
+    "synchronization/semaphore_test.cc",
+    "synchronization/scoped_spin_guard_test.cc",
+    "thread/thread_log_messages_test.cc",
+    "thread/thread_test.cc",
+    "thread/worker_thread_test.cc",
+]
+
+CRASHPAD_UTIL_TEST_POSIX_SOURCES = [
+    "posix/process_info_test.cc",
+    "posix/scoped_mmap_test.cc",
+    "posix/signals_test.cc",
+    "posix/symbolic_constants_posix_test.cc",
+]
+
+CRASHPAD_UTIL_TEST_APPLE_SOURCES = [
+    "mac/xattr_test.cc",
+    "mach/composite_mach_message_server_test.cc",
+    "mach/exc_server_variants_test.cc",
+    "mach/exception_behaviors_test.cc",
+    "mach/mach_extensions_test.cc",
+    "mach/mach_message_test.cc",
+    "mach/symbolic_constants_mach_test.cc",
+    "misc/capture_context_test_util_mac.cc",
+]
+
+CRASHPAD_UTIL_TEST_MACOS_SOURCES = [
+    "mac/sysctl_test.cc",
+    "mach/bootstrap_test.cc",
+    "mach/child_port_handshake_test.cc",
+    "mach/child_port_server_test.cc",
+    "mach/exc_client_variants_test.cc",
+    "mach/exception_ports_test.cc",
+    "mach/exception_types_test.cc",
+    "mach/mach_message_server_test.cc",
+    "mach/notify_server_test.cc",
+    "mach/scoped_task_suspend_test.cc",
+    "process/process_memory_mac_test.cc",
+]
+
+CRASHPAD_UTIL_TEST_LINUX_SOURCES = [
+    "linux/auxiliary_vector_test.cc",
+    "linux/memory_map_test.cc",
+    "linux/proc_stat_reader_test.cc",
+    "linux/proc_task_reader_test.cc",
+    "linux/ptrace_broker_test.cc",
+    "linux/ptracer_test.cc",
+    "linux/scoped_ptrace_attach_test.cc",
+    "linux/socket_test.cc",
+    "misc/capture_context_test_util_linux.cc",
+    "process/process_memory_sanitized_test.cc",
+]
+
+CRASHPAD_UTIL_TEST_WINDOWS_SOURCES = [
+    "misc/capture_context_test_util_win.cc",
+    "win/command_line_test.cc",
+    "win/critical_section_with_debug_info_test.cc",
+    "win/exception_handler_server_test.cc",
+    "win/get_function_test.cc",
+    "win/handle_test.cc",
+    "win/initial_client_data_test.cc",
+    "win/loader_lock_test.cc",
+    "win/process_info_test.cc",
+    "win/registration_protocol_win_test.cc",
+    "win/safe_terminate_process_test.cc",
+    "win/scoped_process_suspend_test.cc",
+    "win/session_end_watcher_test.cc",
+]
+
+objc_library(
+    name = "crashpad_util_test_apple",
+    srcs = [
+        "mac/launchd_test.mm",
+        "mac/mac_util_test.mm",
+        "mac/service_management_test.mm",
+        "stdlib/objc.h",
+    ],
+    copts = CRASHPAD_COMMON_COPTS + [
+        "-fobjc-arc",
+        "-fno-objc-arc-exceptions",
+        "-fobjc-call-cxx-cdtors",
+    ],
+    deps = [
+        ":util",
+        "//:internal",
+        "@com_google_googletest//:gtest",
+    ],
+)
+
+cc_test(
+    name = "crashpad_util_test",
+    testonly = True,
+    srcs = CRASHPAD_UTIL_TEST_SOURCES +
+           select({
+               "@platforms//os:macos": CRASHPAD_UTIL_TEST_POSIX_SOURCES + CRASHPAD_UTIL_TEST_APPLE_SOURCES +
+                                       CRASHPAD_UTIL_TEST_MACOS_SOURCES,
+               "@platforms//os:linux": CRASHPAD_UTIL_TEST_LINUX_SOURCES +
+                                       CRASHPAD_UTIL_TEST_POSIX_SOURCES,
+               "@platforms//os:windows": CRASHPAD_UTIL_TEST_WINDOWS_SOURCES,
+               "//conditions:default": [],
+           }),
+    copts = CRASHPAD_COMMON_COPTS + select({
+        "@platforms//os:windows": [],
+        "//conditions:default": [
+            "-Wno-non-virtual-dtor",
+        ],
+    }),
+    data = [
+        "net/testdata/ascii_http_body.txt",
+        "net/testdata/binary_http_body.dat",
+        "net/testdata/crashpad_util_test_cert.pem",
+        "net/testdata/crashpad_util_test_key.pem",
+        ":http_transport_test_server",
+    ] + select({
+        "@platforms//os:windows": [
+            ":crashpad_util_test_loader_lock_test",
+            ":crashpad_util_test_process_info_test_child",
+            ":crashpad_util_test_safe_terminate_process_test_child",
+        ],
+        "//conditions:default": [],
+    }),
+    linkopts = select({
+        "@platforms//os:windows": [
+            "-defaultlib:rpcrt4.lib",
+            "-defaultlib:dbghelp.lib",
+            "-defaultlib:shell32.lib",
+        ],
+        "//conditions:default": [],
+    }),
+
+    # We will not be able to retrieve proper process info on linux in a sandboxed environment
+    # causing test failures.
+    tags = ["no-sandbox"],
+    deps = [
+        ":net",
+        ":no_cfi_icall",
+        ":util",
+        "//:internal",
+        "//:zlib",
+        "//client",
+        "//compat",
+        "//test",
+        "//test:googletest_main",
+        "//third_party/mini_chromium:base",
+        "@com_google_googletest//:gtest",
+    ] + select({
+        "@platforms//os:macos": [":crashpad_util_test_apple"],
+        "//conditions:default": [
+            # "//third_party/lss",
+        ],
+    }),
+)
+
+cc_library(
+    name = "net_hdrs",
+    hdrs = [
+        "net/http_body.h",
+        "net/http_body_gzip.h",
+        "net/http_headers.h",
+        "net/http_multipart_builder.h",
+        "net/http_transport.h",
+        "net/url.h",
+    ],
+    include_prefix = "util",
+    deps = ["//third_party/mini_chromium:base"],
+)
+
+objc_library(
+    name = "net_apple",
+    srcs = ["net/http_transport_mac.mm"],
+    copts = [
+        "-fobjc-arc",
+        "-fno-objc-arc-exceptions",
+        "-fobjc-call-cxx-cdtors",
+        "-Wno-shorten-64-to-32",
+    ],
+    deps = [
+        ":net_hdrs",
+        ":util",
+        "//:internal",
+    ],
+)
+
+cc_library(
+    name = "net",
+    srcs = [
+        "net/http_body.cc",
+        "net/http_body_gzip.cc",
+        "net/http_multipart_builder.cc",
+        "net/http_transport.cc",
+        "net/url.cc",
+    ] + select({
+        "//conditions:default": [],
+        "@platforms//os:linux": ["net/http_transport_socket.cc"],
+        "@platforms//os:windows": ["net/http_transport_win.cc"],
+    }),
+    copts = CRASHPAD_COMMON_COPTS,
+    local_defines = ["CRASHPAD_USE_BORINGSSL"],
+    deps = [
+        ":net_hdrs",
+        ":util",
+        "//third_party/mini_chromium:base",
+    ] + select({
+        "//conditions:default": [],
+        "@platforms//os:macos": [
+            ":net_apple",
+        ],
+        "@platforms//os:linux": [
+            "@boringssl//:ssl",
+        ],
+    }),
+)
+
+cc_binary(
+    name = "http_transport_test_server",
+    testonly = True,
+    srcs = ["net/http_transport_test_server.cc"],
+    copts = CRASHPAD_COMMON_COPTS,
+    linkopts = select({
+        "//conditions:default": [],
+    }),
+    deps = [
+        ":net",
+        ":util",
+        "//:internal",
+        "//:zlib",
+        "//third_party/cpp-httplib",
+        "//third_party/mini_chromium:base",
+        "//tools:tool_support",
+    ],
+)
+
+cc_crashpad_test_module(
+    name = "crashpad_util_test_loader_lock_test",
+    srcs = ["win/loader_lock_test_dll.cc"],
+    target_compatible_with = [
+        "@platforms//os:windows",
+    ],
+    deps = [":util"],
+)
+
+cc_binary(
+    name = "crashpad_util_test_process_info_test_child",
+    testonly = True,
+    srcs = ["win/process_info_test_child.cc"],
+    copts = CRASHPAD_COMMON_COPTS,
+    target_compatible_with = [
+        "@platforms//os:windows",
+    ],
+    deps = [":util"],
+)
+
+cc_binary(
+    name = "crashpad_util_test_safe_terminate_process_test_child",
+    testonly = True,
+    srcs = ["win/safe_terminate_process_test_child.cc"],
+    copts = CRASHPAD_COMMON_COPTS,
+    target_compatible_with = [
+        "@platforms//os:windows",
+    ],
+    deps = [":util"],
+)
