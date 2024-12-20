@@ -1,0 +1,11 @@
+
+name: "mini_chromium"
+third_party {
+  license_type: NOTICE
+  version: "c4bcfd045d8dab7f78c7e17a74672e3509a1f182"
+  identifier {
+    value: "https://chromium.googlesource.com/chromium/mini_chromium"
+    type: "Git"
+    version: "c4bcfd045d8dab7f78c7e17a74672e3509a1f182"
+  }
+}

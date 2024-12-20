@@ -1,0 +1,11 @@
+
+name: "linux-syscall-support"
+third_party {
+  license_type: NOTICE
+  version: "ed31caa60f20a4f6569883b2d752ef7522de51e0"
+  identifier {
+    value: "https://chromium.googlesource.com/linux-syscall-support"
+    type: "Git"
+    version: "ed31caa60f20a4f6569883b2d752ef7522de51e0"
+  }
+}

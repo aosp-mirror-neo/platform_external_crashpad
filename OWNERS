@@ -1,0 +1,9 @@
+include platform/system/core:main:/janitors/OWNERS
+
+# Android Emulator Team
+bohu@google.com
+jansene@google.com
+
+# Android Studio
+sanglardf@google.com
+
