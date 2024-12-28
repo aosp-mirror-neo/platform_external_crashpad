@@ -1,0 +1,400 @@
+{
+  "autosort": true,
+  "line_width": 80,
+  "dangle_parens": false,
+  "first_comment_is_literal": true,
+  "command_case": "lower",
+  "additional_commands": {
+    "android_add_library": {
+      "flags": [
+        "NODISTRIBUTE",
+        "SHARED"
+      ],
+      "kwargs": {
+        "TARGET": "*",
+        "ALIAS": "*",
+        "BAZEL": "*",
+        "LIBTARGET": "*",
+        "REPO": "*",
+        "LICENSE": "*",
+        "REPO_DIR": "*",
+        "NOTICE": "*",
+        "INCLUDES": {
+          "pargs": {
+            "nargs": "*",
+            "tags": [
+              "file-list"
+            ],
+            "sortable": "True"
+          }
+        },
+        "DARWIN": {
+          "pargs": {
+            "nargs": "*",
+            "tags": [
+              "file-list"
+            ],
+            "sortable": "True"
+          }
+        },
+        "WINDOWS": {
+          "pargs": {
+            "nargs": "*",
+            "tags": [
+              "file-list"
+            ],
+            "sortable": "True"
+          }
+        },
+        "MSVC": {
+          "pargs": {
+            "nargs": "*",
+            "tags": [
+              "file-list"
+            ],
+            "sortable": "True"
+          }
+        },
+        "LINUX": {
+          "pargs": {
+            "nargs": "*",
+            "tags": [
+              "file-list"
+            ],
+            "sortable": "True"
+          }
+        },
+        "POSIX": {
+          "pargs": {
+            "nargs": "*",
+            "tags": [
+              "file-list"
+            ],
+            "sortable": "True"
+          }
+        },
+        "DEPS": {
+          "pargs": {
+            "nargs": "*",
+            "tags": [
+              "file-list"
+            ],
+            "sortable": "True"
+          }
+        },
+        "SRC": {
+          "pargs": {
+            "nargs": "*",
+            "tags": [
+              "file-list"
+            ],
+            "sortable": "True"
+          }
+        },
+        "SOURCE_DIR": "*",
+        "WINDOWS_SOURCE_DIR": "*",
+        "LINUX_SOURCE_DIR": "*",
+        "DARWIN_SOURCE_DIR": "*"
+      }
+    },
+    "android_add_executable": {
+      "flags": [
+        "NODISTRIBUTE"
+      ],
+      "kwargs": {
+        "TARGET": "*",
+        "LIBTARGET": "*",
+        "REPO": "*",
+        "LICENSE": "*",
+        "REPO_DIR": "*",
+        "NOTICE": "*",
+        "DEPS": {
+          "pargs": {
+            "nargs": "*",
+            "tags": [
+              "file-list"
+            ],
+            "sortable": "True"
+          }
+        },
+        "DARWIN": {
+          "pargs": {
+            "nargs": "*",
+            "tags": [
+              "file-list"
+            ],
+            "sortable": "True"
+          }
+        },
+        "WINDOWS": {
+          "pargs": {
+            "nargs": "*",
+            "tags": [
+              "file-list"
+            ],
+            "sortable": "True"
+          }
+        },
+        "MSVC": {
+          "pargs": {
+            "nargs": "*",
+            "tags": [
+              "file-list"
+            ],
+            "sortable": "True"
+          }
+        },
+        "LINUX": {
+          "pargs": {
+            "nargs": "*",
+            "tags": [
+              "file-list"
+            ],
+            "sortable": "True"
+          }
+        },
+        "POSIX": {
+          "pargs": {
+            "nargs": "*",
+            "tags": [
+              "file-list"
+            ],
+            "sortable": "True"
+          }
+        },
+        "SRC": {
+          "pargs": {
+            "nargs": "*",
+            "tags": [
+              "file-list"
+            ],
+            "sortable": "True"
+          }
+        }
+      }
+    },
+    "crashpad_library": {
+      "kwargs": {
+        "TARGET": "*",
+        "SRC": {
+          "pargs": {
+            "nargs": "*",
+            "tags": [
+              "file-list"
+            ],
+            "sortable": "True"
+          }
+        },
+        "APPLE": {
+          "pargs": {
+            "nargs": "*",
+            "tags": [
+              "file-list"
+            ],
+            "sortable": "True"
+          }
+        },
+        "LINUX": {
+          "pargs": {
+            "nargs": "*",
+            "tags": [
+              "file-list"
+            ],
+            "sortable": "True"
+          }
+        },
+        "WIN32": {
+          "pargs": {
+            "nargs": "*",
+            "tags": [
+              "file-list"
+            ],
+            "sortable": "True"
+          }
+        },
+        "POSIX": {
+          "pargs": {
+            "nargs": "*",
+            "tags": [
+              "file-list"
+            ],
+            "sortable": "True"
+          }
+        },
+        "DEPS": {
+          "pargs": {
+            "nargs": "*",
+            "tags": [
+              "file-list"
+            ],
+            "sortable": "True"
+          }
+        }
+      }
+    },
+    "crashpad_test_module": {
+      "kwargs": {
+        "TARGET": "*",
+        "TEST": "*",
+        "SRC": {
+          "pargs": {
+            "nargs": "*",
+            "tags": [
+              "file-list"
+            ],
+            "sortable": "True"
+          }
+        },
+        "APPLE": {
+          "pargs": {
+            "nargs": "*",
+            "tags": [
+              "file-list"
+            ],
+            "sortable": "True"
+          }
+        },
+        "LINUX": {
+          "pargs": {
+            "nargs": "*",
+            "tags": [
+              "file-list"
+            ],
+            "sortable": "True"
+          }
+        },
+        "WIN32": {
+          "pargs": {
+            "nargs": "*",
+            "tags": [
+              "file-list"
+            ],
+            "sortable": "True"
+          }
+        },
+        "POSIX": {
+          "pargs": {
+            "nargs": "*",
+            "tags": [
+              "file-list"
+            ],
+            "sortable": "True"
+          }
+        },
+        "DEPS": {
+          "pargs": {
+            "nargs": "*",
+            "tags": [
+              "file-list"
+            ],
+            "sortable": "True"
+          }
+        }
+      }
+    },
+    "masm_compile": {
+      "kwargs": {
+        "TARGET": "*",
+        "SRC": {
+          "pargs": {
+            "nargs": "*",
+            "tags": [
+              "file-list"
+            ],
+            "sortable": "True"
+          }
+        }
+      }
+    },
+    "mig_lib": {
+      "kwargs": {
+        "TARGET": "*",
+        "SRC": {
+          "pargs": {
+            "nargs": "*",
+            "tags": [
+              "file-list"
+            ],
+            "sortable": "True"
+          }
+        }
+      }
+    },
+    "crashpad_binary": {
+      "flags": [
+        "PUBLIC"
+      ],
+      "kwargs": {
+        "TARGET": "*",
+        "SRC": {
+          "pargs": {
+            "nargs": "*",
+            "tags": [
+              "file-list"
+            ],
+            "sortable": "True"
+          }
+        },
+        "APPLE": {
+          "pargs": {
+            "nargs": "*",
+            "tags": [
+              "file-list"
+            ],
+            "sortable": "True"
+          }
+        },
+        "LINUX": {
+          "pargs": {
+            "nargs": "*",
+            "tags": [
+              "file-list"
+            ],
+            "sortable": "True"
+          }
+        },
+        "WIN32": {
+          "pargs": {
+            "nargs": "*",
+            "tags": [
+              "file-list"
+            ],
+            "sortable": "True"
+          }
+        },
+        "POSIX": {
+          "pargs": {
+            "nargs": "*",
+            "tags": [
+              "file-list"
+            ],
+            "sortable": "True"
+          }
+        },
+        "DEPS": {
+          "pargs": {
+            "nargs": "*",
+            "tags": [
+              "file-list"
+            ],
+            "sortable": "True"
+          }
+        }
+      }
+    }
+  },
+  "separate_fn_TARGET_with_space": false,
+  "always_wrap": [],
+  "separate_ctrl_TARGET_with_space": false,
+  "max_subgroups_hwrap": 10,
+  "fence_pattern": "^\\s*([`~]{3}[`~]*)(.*)$",
+  "enable_markup": true,
+  "enable_sort": true,
+  "ruler_pattern": "^\\s*[^\\w\\s]{3}.*[^\\w\\s]{3}$",
+  "tab_size": 2,
+  "keyword_case": "unchanged",
+  "enum_char": ".",
+  "literal_comment_pattern": null,
+  "bullet_char": "*",
+  "line_ending": "unix"
+}
