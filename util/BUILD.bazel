@@ -23,6 +23,21 @@ package(
     ],
 )
 
+toolchain_type(name = "mig_toolchain_type")
+
+toolchain(
+    name = "mig_toolchain",
+    exec_compatible_with = [
+        "@platforms//os:macos",
+        "@bazel_tools//tools/cpp:clang",
+    ],
+    target_compatible_with = [
+        "@platforms//os:macos",
+    ],
+    toolchain = "@xcode_tools//:mig",
+    toolchain_type = ":mig_toolchain_type",
+)
+
 py_binary(
     name = "mig_fix",
     srcs = [
@@ -38,11 +53,9 @@ mig(
     name = "mac_mig_gen",
     srcs = [
         "mach/child_port.defs",
-    ],
-    sdk_srcs = [
-        "/usr/include/mach/exc.defs",
-        "/usr/include/mach/mach_exc.defs",
-        "/usr/include/mach/notify.defs",
+        "@xcode_tools//:SDKs/MacOSX.sdk/usr/include/mach/exc.defs",
+        "@xcode_tools//:SDKs/MacOSX.sdk/usr/include/mach/mach_exc.defs",
+        "@xcode_tools//:SDKs/MacOSX.sdk/usr/include/mach/notify.defs",
     ],
 )
 

@@ -20,10 +20,9 @@ Generator (MIG) files for inter-process communication on macOS/iOS. It uses `mig
 the generated files.
 """
 
-load("@build_bazel_apple_support//lib:apple_support.bzl", "apple_support")
-load("@bazel_skylib//lib:dicts.bzl", "dicts")
 load("@bazel_skylib//lib:paths.bzl", "paths")
-load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
+load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
+load("@rules_cc//cc:find_cc_toolchain.bzl", "find_cc_toolchain", "use_cc_toolchain")
 
 _mig_suffixes = {
     "user": "User.c",
@@ -41,46 +40,28 @@ _migfix_fixed_parameters = {
     "sheader": "--fixed_server_h",
 }
 
-def _mig_generate(ctx, defs_file, defs_path = None):
+def _mig_generate(ctx, defs_file, mig, cc, cc_env, cc_toolchain):
     """Generates MIG code from a .defs file.
 
     Args:
         ctx: The rule context.
-        defs_file: The .defs input file as a File object. Mutually exclusive with defs_path.
-        defs_path: The path to the .defs input file as a string. Mutually exclusive with defs_file.
+        defs_file: The .defs input file as a File object.
+        mig: The mig toolchain info.
+        cc: The path to c compiler.
+        cc_env: Environment variables for the cc action.
+        cc_toolchain: The current cc toolchain.
 
     Returns:
         A dictionary mapping MIG output file types (user, server, header, sheader) to
         corresponding File objects.
     """
-    if (defs_file and defs_path) or (defs_file == None and defs_path == None):
-        fail("_mig_generate accepts exactly one of |defs_file| and |defs_path|; " +
-             "%s and %s were provided." % (defs_file, defs_path))
-    if defs_path == None:
-        defs_path = defs_file.path
-        basename = defs_file.basename
-    else:
-        basename = paths.basename(defs_path)
-
-    raw_interface = {}
-    target_interface = {}
-
-    args = ["mig"]
-
-    arch = None
-    cpu = find_cpp_toolchain(ctx).cpu
-    if cpu.endswith("arm64"):
-        arch = "arm64"
-    elif cpu.endswith("armv7"):
-        arch = "armv7"
-    elif cpu.endswith("x86_64"):
-        arch = "x86_64"
-    else:
-        fail("Could not identify CPU architecture: " + cpu)
-    args.extend(["-arch", arch])
+    defs_path = defs_file.path
+    basename = defs_file.basename
 
     defs_name = paths.split_extension(basename)[0]
 
+    raw_interface = {}
+    target_interface = {}
     for target, suffix in _mig_suffixes.items():
         filename = defs_name + suffix
         raw_interface[target] = ctx.actions.declare_file("raw_" + filename)
@@ -88,47 +69,65 @@ def _mig_generate(ctx, defs_file, defs_path = None):
             filename = paths.join(ctx.attr.output_dir, filename)
         target_interface[target] = ctx.actions.declare_file(filename)
 
-        args.extend(["-" + target, raw_interface[target].path])
-
-    args.extend(["-isysroot", apple_common.apple_toolchain().sdk_dir()])
+    args = []
+    args.extend(mig.args)
+    args.extend(["-cc", cc])
+    for target, raw_file in raw_interface.items():
+        args.extend(["-" + target, raw_file.path])
+    if cc_toolchain.sysroot:
+        args.extend(["-isysroot", cc_toolchain.sysroot])
     args.extend(["-I" + ctx.expand_location(include, ctx.attr.deps) for include in ctx.attr.include_dirs])
     args.append(defs_path)
 
-    if defs_file:
-        inputs = [defs_file]
-    else:
-        inputs = []
-    apple_support.run(
-        actions = ctx.actions,
-        apple_fragment = ctx.fragments.apple,
+    ctx.actions.run(
         arguments = args,
-        executable = "xcrun",
-        execution_requirements = {"no-sandbox": "1"},
-        inputs = inputs + ctx.files.included_srcs,
+        executable = mig.executable,
+        tools = mig.runfiles + [cc_toolchain.all_files],
+        inputs = [defs_file] + ctx.files.included_srcs,
+        env = cc_env | mig.env,
         mnemonic = "GenerateMachInterface",
         outputs = raw_interface.values(),
         progress_message = "Generating Mach interface: %s" % basename,
-        xcode_config = ctx.attr._xcode_config[apple_common.XcodeVersionConfig],
-        xcode_path_resolve_level = apple_support.xcode_path_resolve_level.args,
+        toolchain = ":mig_toolchain_type",
     )
 
-    args = [ctx.executable._migfix.path]
+    args = []
     for target in _migfix_order:
         args.append(raw_interface[target].path)
     for target, parameter in _migfix_fixed_parameters.items():
         args.extend([parameter, target_interface[target].path])
 
-    ctx.actions.run_shell(
+    ctx.actions.run(
+        arguments = args,
+        executable = ctx.executable._migfix,
         inputs = raw_interface.values(),
+        mnemonic = "FixMachInterface",
         outputs = target_interface.values(),
         progress_message = "Fixing generated interface: %s" % basename,
-        command = " ".join(args),
-        tools = [ctx.executable._migfix],
     )
 
     return target_interface
 
 def _mig_impl(ctx):
+    mig = ctx.toolchains[":mig_toolchain_type"].tool
+    cc_toolchain = find_cc_toolchain(ctx)
+    feature_configuration = cc_common.configure_features(
+        ctx = ctx,
+        cc_toolchain = cc_toolchain,
+        requested_features = ctx.features + ["sysroot"],
+        unsupported_features = ctx.disabled_features,
+    )
+    cc = cc_common.get_tool_for_action(
+        feature_configuration = feature_configuration,
+        action_name = ACTION_NAMES.c_compile,
+    )
+    cc_variables = cc_common.empty_variables()
+    cc_env = cc_common.get_environment_variables(
+        feature_configuration = feature_configuration,
+        action_name = ACTION_NAMES.c_compile,
+        variables = cc_variables,
+    )
+
     output_files = []
 
     src_files = []
@@ -136,27 +135,8 @@ def _mig_impl(ctx):
     client_files = []
     server_files = []
 
-    defs_files = depset(transitive = [src.files for src in ctx.attr.srcs])
-
-    for defs_file in defs_files.to_list():
-        result_files = _mig_generate(ctx, defs_file)
-        output_files.extend(result_files.values())
-        for target, result_file in result_files.items():
-            if target.endswith("header"):
-                hdr_files.append(result_file)
-            else:
-                src_files.append(result_file)
-
-            if target.startswith("s"):
-                server_files.append(result_file)
-            else:
-                client_files.append(result_file)
-    for sdk_defs in ctx.attr.sdk_srcs:
-        defs_path = "{}/{}".format(
-            apple_common.apple_toolchain().sdk_dir(),
-            sdk_defs,
-        )
-        result_files = _mig_generate(ctx, None, defs_path)
+    for defs_file in ctx.files.srcs:
+        result_files = _mig_generate(ctx, defs_file, mig, cc, cc_env, cc_toolchain)
         output_files.extend(result_files.values())
         for target, result_file in result_files.items():
             if target.endswith("header"):
@@ -193,47 +173,41 @@ mig = rule(
     - `hdr_files`: Contains all generated header files.
     - `client_files`: Contains generated client-side source and header files.
     - `server_files`: Contains generated server-side source and header files.
-
-
-    Attributes:
-        srcs: A list of MIG definition files (.defs).
-        included_srcs: Additional MIG definition files (.defs). These are passed to the MIG tool,
-            but are not considered outputs of this rule. This is useful for including definitions from other MIG rules.
-        include_dirs: A list of include directories for the MIG tool.
-        output_dir: An optional output directory for generated files. If not specified, files are placed
-             in the default genfiles directory.
-        deps: Dependencies required for include headers.
-        sdk_srcs: A list of MIG definition files relative to the macOS SDK. This allows using system-provided
-            MIG definitions.
-        _cc_toolchain: The C++ toolchain to use. This is automatically determined.
-        _migfix:  The mig_fix executable. This is usually provided by Crashpad.
     """,
-    attrs = dicts.add(apple_support.action_required_attrs(), {
+    attrs = {
         "srcs": attr.label_list(
+            doc = "A list of MIG definition files (.defs).",
             allow_files = True,
             mandatory = True,
         ),
         "included_srcs": attr.label_list(
+            doc = "Additional MIG definition files (.defs). These are passed to " +
+                  "the MIG tool, but are not considered outputs of this rule. " +
+                  "This is useful for including definitions from other MIG rules.",
             allow_files = True,
-            mandatory = False,
         ),
-        "include_dirs": attr.string_list(mandatory = False),
-        "output_dir": attr.string(default = ""),
-        "deps": attr.label_list(mandatory = False),
-        "sdk_srcs": attr.string_list(mandatory = False),
-        "_cc_toolchain": attr.label(
-            default = Label("@bazel_tools//tools/cpp:current_cc_toolchain"),
+        "include_dirs": attr.string_list(
+            doc = "A list of include directories for the MIG tool, subject to " +
+                  "$(location ...) expansions.",
+        ),
+        "output_dir": attr.string(
+            doc = "An optional output directory for generated files. If not " +
+                  "specified, files are placed in the default genfiles directory.",
+        ),
+        "deps": attr.label_list(
+            doc = "Labels used for location expansion.",
         ),
         "_migfix": attr.label(
             cfg = "exec",
             executable = True,
             default = Label("//util:mig_fix"),
         ),
-    }),
-    fragments = ["apple", "cpp"],
+        "_cc_toolchain": attr.label(
+            default = Label("@bazel_tools//tools/cpp:current_cc_toolchain"),
+        ),
+    },
+    fragments = ["cpp"],
     implementation = _mig_impl,
     output_to_genfiles = True,
-    toolchains = [
-        "@bazel_tools//tools/cpp:toolchain_type",
-    ],
+    toolchains = use_cc_toolchain() + [":mig_toolchain_type"],
 )
