@@ -462,6 +462,7 @@ cc_library(
             "-framework CoreFoundation",
             "-framework Foundation",
             "-framework IOKit",
+            "-lbsm",
         ],
         "@platforms//os:windows": [
             "-defaultlib:user32.lib",
