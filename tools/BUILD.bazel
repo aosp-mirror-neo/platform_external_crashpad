@@ -1,0 +1,97 @@
+# Copyright 2018 The Crashpad Authors. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+load("//:copts.bzl", "CRASHPAD_COMMON_COPTS")
+
+licenses(["notice"])
+
+package(
+    default_visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "tool_support",
+    srcs = ["tool_support.cc"],
+    hdrs = ["tool_support.h"],
+    copts = CRASHPAD_COMMON_COPTS,
+    include_prefix = "tools",
+    deps = [
+        "//:internal",
+        "//third_party/mini_chromium:base",
+    ],
+)
+
+cc_binary(
+    name = "dump_minidump_annotations",
+    srcs = ["dump_minidump_annotations.cc"],
+    copts = CRASHPAD_COMMON_COPTS,
+    deps = [
+        ":tool_support",
+        "//client",
+        "//snapshot",
+        "//util",
+    ],
+)
+
+cc_binary(
+    name = "crashpad_database_util",
+    srcs = [
+        "crashpad_database_util.cc",
+    ],
+    copts = CRASHPAD_COMMON_COPTS,
+    deps = [
+        ":tool_support",
+        "//:internal",
+        "//client",
+        "//compat",
+        "//third_party/mini_chromium:base",
+        "//util",
+    ],
+)
+
+cc_binary(
+    name = "crashpad_http_upload",
+    srcs = [
+        "crashpad_http_upload.cc",
+    ],
+    copts = CRASHPAD_COMMON_COPTS,
+    deps = [
+        ":tool_support",
+        "//:internal",
+        "//compat",
+        "//third_party/mini_chromium:base",
+        "//util",
+    ] + select({
+        "//build/bazel/platforms/os:mac": [
+            "//util:util_mac",
+        ],
+        "//conditions:default": [],
+    }),
+)
+
+cc_binary(
+    name = "base94_encoder",
+    srcs = ["base94_encoder.cc"],
+    deps = [
+        ":tool_support",
+        "//:internal",
+        "//third_party/mini_chromium:base",
+        "//util",
+    ] + select({
+        "//build/bazel/platforms/os:mac": [
+            "//util:util_mac",
+        ],
+        "//conditions:default": [],
+    }),
+)

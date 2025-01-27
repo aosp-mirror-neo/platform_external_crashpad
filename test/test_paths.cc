@@ -22,6 +22,10 @@
 #include "build/build_config.h"
 #include "util/misc/paths.h"
 
+#ifdef CRASHPAD_TEST_BAZEL_CC
+#include "test/bazel/bazel_info.h"
+#endif
+
 namespace crashpad {
 namespace test {
 
@@ -65,6 +69,10 @@ base::FilePath TestDataRootInternal() {
 
     return base::FilePath(environment_value);
   }
+
+#if CRASHPAD_TEST_BAZEL_CC
+  return Bazel::runfilesPath("test");
+#endif
 
   base::FilePath executable_path;
   if (Paths::Executable(&executable_path)) {

@@ -1,0 +1,60 @@
+# Copyright 2024 - The Android Open Source Project
+#
+# Licensed under the Apache License, Version 2.0 (the',  help='License');
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an',  help='AS IS' BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Description:
+#   Crashpad is a crash-reporting system.
+load("copts.bzl", "CRASHPAD_COMMON_COPTS")
+
+package(default_visibility = [
+    ":clients",
+    "//extenal/crashpad:__subpackages__",
+])
+
+# Crashpad itself is licensed under the Apache 2.0 license, but (when built for
+# non-Apple systems) has a dependency on a header for the Mach-O loader. This is
+# licensed under the APSL 2.0.
+licenses(["reciprocal"])
+
+exports_files(["LICENSE"])
+
+package_group(
+    name = "clients",
+    packages = ["//..."],
+)
+
+cc_library(
+    name = "internal",
+    hdrs = ["package.h"],
+    copts = CRASHPAD_COMMON_COPTS,
+    visibility = ["//:__subpackages__"],
+)
+
+cc_library(
+    name = "zlib",
+    hdrs = ["third_party/zlib/zlib_crashpad.h"],
+    include_prefix = "third_party/zlib",
+    deps = ["@zlib"],
+)
+
+test_suite(
+    name = "crashpad_tests",
+    tests = [
+        "//client:crashpad_client_test",
+        "//handler:crashpad_handler_test",
+        "//minidump:crashpad_minidump_test",
+        "//snapshot:crashpad_snapshot_test",
+        "//test:crashpad_test_test",
+        "//util:crashpad_util_test",
+    ],
+)

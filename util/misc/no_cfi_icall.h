@@ -48,6 +48,16 @@ struct FunctorTraits<R (*)(Args..., ...) noexcept> {
   }
 };
 
+#if BUILDFLAG(IS_WIN)
+template <>
+struct FunctorTraits<DWORD(__cdecl*)(void)> {
+  template <typename Function, typename... RunArgs>
+  DISABLE_CFI_ICALL static DWORD Invoke(Function&& function, RunArgs&&... args) {
+    return std::forward<Function>(function)(std::forward<RunArgs>(args)...);
+  }
+};
+#endif  // BUILDFLAG(IS_WIN)
+
 #if BUILDFLAG(IS_WIN) && defined(ARCH_CPU_X86)
 template <typename R, typename... Args>
 struct FunctorTraits<R(__stdcall*)(Args...) noexcept> {

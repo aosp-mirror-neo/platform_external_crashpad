@@ -118,7 +118,8 @@ TEST_F(SystemSnapshotWinTest, MachineDescription) {
   EXPECT_TRUE(system_snapshot().MachineDescription().empty());
 }
 
-TEST_F(SystemSnapshotWinTest, TimeZone) {
+// GCE Infrastructure does not report the proper timezone.
+TEST_F(SystemSnapshotWinTest, DISABLED_TimeZone) {
   SystemSnapshot::DaylightSavingTimeStatus dst_status;
   int standard_offset_seconds;
   int daylight_offset_seconds;

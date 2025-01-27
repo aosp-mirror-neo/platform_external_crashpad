@@ -40,6 +40,11 @@
 #include "base/test/test_suite.h"
 #endif  // CRASHPAD_IS_IN_CHROMIUM
 
+#include <iostream>
+#ifdef CRASHPAD_TEST_BAZEL_CC
+#include "test/bazel/bazel_info.h"
+#endif
+
 namespace {
 
 #if !BUILDFLAG(IS_IOS)
@@ -63,6 +68,10 @@ int main(int argc, char* argv[]) {
 #if BUILDFLAG(IS_ANDROID)
   crashpad::InitializeSignalDispositions();
 #endif  // BUILDFLAG(IS_ANDROID)
+
+#if CRASHPAD_TEST_BAZEL_CC
+  crashpad::test::Bazel::storeCommandLineArgs(argc, argv);
+#endif
 
   crashpad::test::InitializeMainArguments(argc, argv);
 

@@ -1,0 +1,190 @@
+# Copyright 2018 The Crashpad Authors. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+load("//:copts.bzl", "CRASHPAD_COMMON_COPTS")
+
+licenses(["notice"])
+
+package(
+    default_visibility = [
+        "//:__subpackages__",
+    ],
+)
+
+cc_library(
+    name = "test",
+    testonly = True,
+    srcs = [
+        "bazel/bazel_info.cpp",
+        "bazel/bazel_info.h",
+        "errors.cc",
+        "errors.h",
+        "file.cc",
+        "file.h",
+        "filesystem.cc",
+        "filesystem.h",
+        "gtest_death.h",
+        "hex_string.cc",
+        "hex_string.h",
+        "main_arguments.cc",
+        "main_arguments.h",
+        "multiprocess.h",
+        "multiprocess_exec.cc",
+        "multiprocess_exec.h",
+        "process_type.cc",
+        "process_type.h",
+        "scoped_guarded_page.h",
+        "scoped_module_handle.cc",
+        "scoped_module_handle.h",
+        "scoped_set_thread_name.h",
+        "scoped_temp_dir.cc",
+        "scoped_temp_dir.h",
+        "test_paths.cc",
+        "test_paths.h",
+    ] + select({
+        "@platforms//os:linux": [
+            "linux/fake_ptrace_connection.cc",
+            "linux/fake_ptrace_connection.h",
+            "linux/get_tls.cc",
+            "linux/get_tls.h",
+            "multiprocess_exec_posix.cc",
+            "multiprocess_posix.cc",
+            "scoped_guarded_page_posix.cc",
+            "scoped_set_thread_name_posix.cc",
+            "scoped_temp_dir_posix.cc",
+        ],
+        "@platforms//os:macos": [
+            "mac/dyld.cc",
+            "mac/dyld.h",
+            "mac/exception_swallower.cc",
+            "mac/exception_swallower.h",
+            "mac/mach_errors.cc",
+            "mac/mach_errors.h",
+            "mac/mach_multiprocess.cc",
+            "mac/mach_multiprocess.h",
+            "multiprocess_exec_posix.cc",
+            "multiprocess_posix.cc",
+            "scoped_guarded_page_posix.cc",
+            "scoped_set_thread_name_posix.cc",
+            "scoped_temp_dir_posix.cc",
+        ],
+        "@platforms//os:windows": [
+            "multiprocess_exec_win.cc",
+            "scoped_guarded_page_win.cc",
+            "scoped_set_thread_name_win.cc",
+            "scoped_temp_dir_win.cc",
+            "win/child_launcher.cc",
+            "win/child_launcher.h",
+            "win/win_child_process.cc",
+            "win/win_child_process.h",
+            "win/win_multiprocess.cc",
+            "win/win_multiprocess.h",
+            "win/win_multiprocess_with_temp_dir.cc",
+            "win/win_multiprocess_with_temp_dir.h",
+        ],
+        "//conditions:default": [],
+    }),
+    copts = CRASHPAD_COMMON_COPTS,
+    data = [
+        "test_paths_test_data_root.txt",
+    ],
+    defines = ["CRASHPAD_TEST_BAZEL_CC"],
+    linkopts = select({
+        "@platforms//os:macos": [
+            "-framework IOKit",
+            "-lbsm",
+        ],
+        "//conditions:default": [],
+    }),
+    deps = [
+        "//compat",
+        "//handler",
+        "//snapshot",
+        "//third_party/mini_chromium:base",
+        "//util",
+        "@bazel_tools//tools/cpp/runfiles",
+        "@com_google_googletest//:gtest",
+    ],
+)
+
+cc_test(
+    name = "crashpad_test_test",
+    srcs = [
+        "hex_string_test.cc",
+        "main_arguments_test.cc",
+        "multiprocess_exec_test.cc",
+        "scoped_guarded_page_test.cc",
+        "scoped_temp_dir_test.cc",
+        "test_paths_test.cc",
+    ] + select({
+        "@platforms//os:linux": ["multiprocess_posix_test.cc"],
+        "@platforms//os:macos": ["multiprocess_posix_test.cc"],
+        "//conditions:default": [
+        ],
+    }),
+    copts = CRASHPAD_COMMON_COPTS,
+    data = [
+        "test_paths_test_data_root.txt",
+        ":crashpad_test_test_multiprocess_exec_test_child",
+    ],
+    deps = [
+        ":googlemock_main",
+        ":test",
+        "//:internal",
+        "//compat",
+        "//third_party/mini_chromium:base",
+        "//util",
+    ],
+)
+
+cc_binary(
+    name = "crashpad_test_test_multiprocess_exec_test_child",
+    srcs = ["multiprocess_exec_test_child.cc"],
+    copts = CRASHPAD_COMMON_COPTS,
+    deps = [
+        "//third_party/mini_chromium:base",
+    ],
+)
+
+cc_library(
+    name = "googlemock_main",
+    testonly = True,
+    srcs = ["gtest_main.cc"],
+    copts = CRASHPAD_COMMON_COPTS + [
+        "-DCRASHPAD_TEST_LAUNCHER_GOOGLEMOCK",
+    ],
+    deps = [
+        ":test",
+        "//third_party/mini_chromium:base",
+        "@com_google_googletest//:gtest",
+    ] + select({
+        "//conditions:default": [],
+    }),
+)
+
+cc_library(
+    name = "googletest_main",
+    testonly = True,
+    srcs = ["gtest_main.cc"],
+    copts = CRASHPAD_COMMON_COPTS + [
+        "-DCRASHPAD_TEST_LAUNCHER_GOOGLETEST",
+    ],
+    deps = [
+        ":test",
+        "//third_party/mini_chromium:base",
+        "@com_google_googletest//:gtest",
+    ] + select({
+        "//conditions:default": [],
+    }),
+)

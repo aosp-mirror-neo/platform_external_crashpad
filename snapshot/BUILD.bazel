@@ -1,0 +1,537 @@
+# Copyright 2024 - The Android Open Source Project
+#
+# Licensed under the Apache License, Version 2.0 (the',  help='License');
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an',  help='AS IS' BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+load("//:copts.bzl", "CRASHPAD_COMMON_COPTS", "cc_crashpad_test_module")
+
+licenses(["notice"])
+
+package(
+    default_visibility = [
+        "//:__subpackages__",
+    ],
+)
+
+cc_library(
+    name = "context",
+    srcs = [
+        "cpu_context.cc",
+    ],
+    hdrs = [
+        "cpu_architecture.h",
+        "cpu_context.h",
+    ],
+    copts = CRASHPAD_COMMON_COPTS,
+    include_prefix = "snapshot",
+    deps = [
+        "//third_party/mini_chromium:base",
+        "//util",
+    ],
+)
+
+SNAPSHOT_SRC_COMMON = [
+    "annotation_snapshot.cc",
+    "capture_memory.cc",
+    "crashpad_info_client_options.cc",
+    "handle_snapshot.cc",
+    "memory_snapshot.cc",
+    "minidump/exception_snapshot_minidump.cc",
+    "minidump/memory_snapshot_minidump.cc",
+    "minidump/minidump_annotation_reader.cc",
+    "minidump/minidump_context_converter.cc",
+    "minidump/minidump_simple_string_dictionary_reader.cc",
+    "minidump/minidump_string_list_reader.cc",
+    "minidump/minidump_string_reader.cc",
+    "minidump/module_snapshot_minidump.cc",
+    "minidump/process_snapshot_minidump.cc",
+    "minidump/system_snapshot_minidump.cc",
+    "minidump/thread_snapshot_minidump.cc",
+    "unloaded_module_snapshot.cc",
+]
+
+SNAPSHOT_SRC_POSIX = [
+    "posix/timezone.cc",
+]
+
+SNAPSHOT_SRC_X86 = ["x86/cpuid_reader.cc"]
+
+SNAPSHOT_SRC_LINUX = [
+    "linux/capture_memory_delegate_linux.cc",
+    "linux/cpu_context_linux.cc",
+    "linux/debug_rendezvous.cc",
+    "linux/exception_snapshot_linux.cc",
+    "linux/process_reader_linux.cc",
+    "linux/process_snapshot_linux.cc",
+    "linux/system_snapshot_linux.cc",
+    "linux/thread_snapshot_linux.cc",
+    "sanitized/memory_snapshot_sanitized.cc",
+    "sanitized/module_snapshot_sanitized.cc",
+    "sanitized/process_snapshot_sanitized.cc",
+    "sanitized/sanitization_information.cc",
+    "sanitized/thread_snapshot_sanitized.cc",
+    "crashpad_types/crashpad_info_reader.cc",
+    "crashpad_types/image_annotation_reader.cc",
+    "elf/elf_dynamic_array_reader.cc",
+    "elf/elf_image_reader.cc",
+    "elf/elf_symbol_table_reader.cc",
+    "elf/module_snapshot_elf.cc",
+]
+
+SNAPSHOT_SRC_WINDOWS = [
+    "win/capture_memory_delegate_win.cc",
+    "win/cpu_context_win.cc",
+    "win/exception_snapshot_win.cc",
+    "win/memory_map_region_snapshot_win.cc",
+    "win/module_snapshot_win.cc",
+    "win/pe_image_annotations_reader.cc",
+    "win/pe_image_reader.cc",
+    "win/pe_image_resource_reader.cc",
+    "win/process_reader_win.cc",
+    "win/process_snapshot_win.cc",
+    "win/process_subrange_reader.cc",
+    "win/system_snapshot_win.cc",
+    "win/thread_snapshot_win.cc",
+    "crashpad_types/crashpad_info_reader.cc",
+]
+
+SNAPSHOT_SRC_MAC = [
+    "mac/cpu_context_mac.cc",
+    "mac/exception_snapshot_mac.cc",
+    "mac/mach_o_image_annotations_reader.cc",
+    "mac/mach_o_image_reader.cc",
+    "mac/mach_o_image_segment_reader.cc",
+    "mac/mach_o_image_symbol_table_reader.cc",
+    "mac/module_snapshot_mac.cc",
+    "mac/process_reader_mac.cc",
+    "mac/process_snapshot_mac.cc",
+    "mac/process_types.cc",
+    "mac/process_types/custom.cc",
+    "mac/system_snapshot_mac.cc",
+    "mac/thread_snapshot_mac.cc",
+]
+
+SNAPSHOT_HDRS_X86 = ["x86/cpuid_reader.h"]
+
+SNAPSHOT_HDRS_COMMON = [
+    "memory_map_region_snapshot.h",
+    "annotation_snapshot.h",
+    "capture_memory.h",
+    "crashpad_info_client_options.h",
+    "exception_snapshot.h",
+    "handle_snapshot.h",
+    "memory_snapshot_generic.h",
+    "memory_snapshot.h",
+    "minidump/exception_snapshot_minidump.h",
+    "minidump/memory_snapshot_minidump.h",
+    "minidump/minidump_annotation_reader.h",
+    "minidump/minidump_context_converter.h",
+    "minidump/minidump_simple_string_dictionary_reader.h",
+    "minidump/minidump_stream.h",
+    "minidump/minidump_string_list_reader.h",
+    "minidump/minidump_string_reader.h",
+    "minidump/module_snapshot_minidump.h",
+    "minidump/process_snapshot_minidump.h",
+    "minidump/system_snapshot_minidump.h",
+    "minidump/thread_snapshot_minidump.h",
+    "module_snapshot.h",
+    "process_snapshot.h",
+    "snapshot_constants.h",
+    "system_snapshot.h",
+    "thread_snapshot.h",
+    "unloaded_module_snapshot.h",
+]
+
+SNAPSHOT_HDRS_POSIX = [
+    "posix/timezone.h",
+]
+
+SNAPSHOT_HDRS_LINUX = [
+    "linux/capture_memory_delegate_linux.h",
+    "linux/cpu_context_linux.h",
+    "linux/debug_rendezvous.h",
+    "linux/exception_snapshot_linux.h",
+    "linux/process_reader_linux.h",
+    "linux/process_snapshot_linux.h",
+    "linux/signal_context.h",
+    "linux/system_snapshot_linux.h",
+    "linux/thread_snapshot_linux.h",
+    "sanitized/memory_snapshot_sanitized.h",
+    "sanitized/module_snapshot_sanitized.h",
+    "sanitized/process_snapshot_sanitized.h",
+    "sanitized/sanitization_information.h",
+    "sanitized/thread_snapshot_sanitized.h",
+    "crashpad_types/crashpad_info_reader.h",
+    "crashpad_types/image_annotation_reader.h",
+    "elf/elf_dynamic_array_reader.h",
+    "elf/elf_image_reader.h",
+    "elf/elf_symbol_table_reader.h",
+    "elf/module_snapshot_elf.h",
+]
+
+SNAPSHOT_HDRS_WINDOWS = [
+    "win/capture_memory_delegate_win.h",
+    "win/cpu_context_win.h",
+    "win/exception_snapshot_win.h",
+    "win/memory_map_region_snapshot_win.h",
+    "win/module_snapshot_win.h",
+    "win/pe_image_annotations_reader.h",
+    "win/pe_image_reader.h",
+    "win/pe_image_resource_reader.h",
+    "win/process_reader_win.h",
+    "win/process_snapshot_win.h",
+    "win/process_subrange_reader.h",
+    "win/system_snapshot_win.h",
+    "win/thread_snapshot_win.h",
+    "crashpad_types/crashpad_info_reader.h",
+]
+
+SNAPSHOT_HDRS_MAC = [
+    "mac/cpu_context_mac.h",
+    "mac/process_types/all.proctype",
+    "mac/process_types/annotation.proctype",
+    "mac/process_types/crashpad_info.proctype",
+    "mac/process_types/crashreporterclient.proctype",
+    "mac/process_types/nlist.proctype",
+    "mac/process_types/loader.proctype",
+    "mac/process_types/dyld_images.proctype",
+    "mac/exception_snapshot_mac.h",
+    "mac/mach_o_image_annotations_reader.h",
+    "mac/mach_o_image_reader.h",
+    "mac/mach_o_image_segment_reader.h",
+    "mac/mach_o_image_symbol_table_reader.h",
+    "mac/module_snapshot_mac.h",
+    "mac/process_reader_mac.h",
+    "mac/process_snapshot_mac.h",
+    "mac/process_types.h",
+    "mac/process_types/flavors.h",
+    "mac/process_types/internal.h",
+    "mac/process_types/traits.h",
+    "mac/system_snapshot_mac.h",
+    "mac/thread_snapshot_mac.h",
+]
+
+cc_library(
+    name = "headers",
+    hdrs = SNAPSHOT_HDRS_COMMON + select({
+        "@platforms//os:linux": SNAPSHOT_HDRS_LINUX + SNAPSHOT_HDRS_POSIX + SNAPSHOT_HDRS_X86,
+        "@platforms//os:osx": SNAPSHOT_HDRS_MAC + SNAPSHOT_HDRS_POSIX,
+        "@platforms//os:windows": SNAPSHOT_HDRS_WINDOWS + SNAPSHOT_HDRS_X86,
+        "//conditions:default": [],
+    }),
+    include_prefix = "snapshot",
+)
+
+cc_library(
+    name = "snapshot",
+    srcs = SNAPSHOT_SRC_COMMON + select({
+        "@platforms//os:linux": SNAPSHOT_SRC_LINUX + SNAPSHOT_SRC_POSIX + SNAPSHOT_SRC_X86,
+        "@platforms//os:osx": SNAPSHOT_SRC_MAC + SNAPSHOT_SRC_POSIX,
+        "@platforms//os:windows": SNAPSHOT_SRC_WINDOWS + SNAPSHOT_SRC_X86,
+        "//conditions:default": [],
+    }),
+    copts = CRASHPAD_COMMON_COPTS,
+    linkopts = select({
+        "@platforms//os:windows": ["/defaultlib:powrprof.lib"],
+        "//conditions:default": [],
+    }),
+    deps = [
+        ":context",
+        ":headers",
+        "//client:common",
+        "//minidump:headers",
+        "//util",
+    ],
+)
+
+cc_library(
+    name = "test_support",
+    testonly = True,
+    srcs = [
+        "test/test_cpu_context.cc",
+        "test/test_exception_snapshot.cc",
+        "test/test_memory_map_region_snapshot.cc",
+        "test/test_memory_snapshot.cc",
+        "test/test_module_snapshot.cc",
+        "test/test_process_snapshot.cc",
+        "test/test_system_snapshot.cc",
+        "test/test_thread_snapshot.cc",
+    ],
+    hdrs = [
+        "test/test_cpu_context.h",
+        "test/test_exception_snapshot.h",
+        "test/test_memory_map_region_snapshot.h",
+        "test/test_memory_snapshot.h",
+        "test/test_module_snapshot.h",
+        "test/test_process_snapshot.h",
+        "test/test_system_snapshot.h",
+        "test/test_thread_snapshot.h",
+    ],
+    copts = CRASHPAD_COMMON_COPTS + select({
+        "@platforms//os:windows": ["/wd4201"],
+        "//conditions:default": [],
+    }),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":context",
+        ":snapshot",
+        "//compat",
+        "//third_party/mini_chromium:base",
+        "//util",
+    ],
+)
+
+cc_crashpad_test_module(
+    name = "crashpad_snapshot_test_module",
+    srcs = ["crashpad_info_client_options_test_module.cc"],
+    deps = [
+        "//client",
+        "//third_party/mini_chromium:base",
+    ],
+)
+
+cc_crashpad_test_module(
+    name = "crashpad_snapshot_test_module_large",
+    srcs = ["crashpad_info_size_test_module.cc"] + select({
+        "@platforms//os:linux": ["crashpad_info_size_test_note.S"],
+        "//conditions:default": [],
+    }),
+    defines = ["CRASHPAD_INFO_SIZE_TEST_MODULE_LARGE"],
+    deps = [
+        "//third_party/mini_chromium:base",
+        "//util",
+    ],
+)
+
+cc_crashpad_test_module(
+    name = "crashpad_snapshot_test_module_small",
+    srcs = ["crashpad_info_size_test_module.cc"] + select({
+        "@platforms//os:linux": ["crashpad_info_size_test_note.S"],
+        "//conditions:default": [],
+    }),
+    defines = ["CRASHPAD_INFO_SIZE_TEST_MODULE_SMALL"],
+    deps = [
+        "//third_party/mini_chromium:base",
+        "//util",
+    ],
+)
+
+cc_crashpad_test_module(
+    name = "crashpad_snapshot_test_both_dt_hash_styles",
+    srcs = ["hash_types_test.cc"],
+    linkopts = ["-Wl,--hash-style=both"],
+    target_compatible_with = [
+        "@platforms//os:linux",
+    ],
+)
+
+cc_crashpad_test_module(
+    name = "crashpad_snapshot_test_module_crashy_initializer",
+    srcs = ["mac/mach_o_image_annotations_reader_test_module_crashy_initializer.cc"],
+    target_compatible_with = [
+        "@platforms//os:osx",
+    ],
+)
+
+cc_binary(
+    name = "crashpad_snapshot_test_no_op",
+    testonly = True,
+    srcs = ["mac/mach_o_image_annotations_reader_test_no_op.cc"],
+    target_compatible_with = [
+        "@platforms//os:osx",
+    ],
+)
+
+# Windows only test binaries
+cc_binary(
+    name = "crashpad_snapshot_test_annotations",
+    srcs = ["win/crashpad_snapshot_test_annotations.cc"],
+    copts = CRASHPAD_COMMON_COPTS,
+    target_compatible_with = [
+        "@platforms//os:windows",
+    ],
+    deps = [
+        "//client",
+        "//compat",
+        "//third_party/mini_chromium:base",
+    ],
+)
+
+cc_binary(
+    name = "crashpad_snapshot_test_crashing_child",
+    srcs = ["win/crashpad_snapshot_test_crashing_child.cc"],
+    target_compatible_with = [
+        "@platforms//os:windows",
+    ],
+    deps = [
+        "//client",
+        "//compat",
+        "//third_party/mini_chromium:base",
+        "//util",
+    ],
+)
+
+cc_binary(
+    name = "crashpad_snapshot_test_dump_without_crashing",
+    srcs = ["win/crashpad_snapshot_test_dump_without_crashing.cc"],
+    copts = CRASHPAD_COMMON_COPTS,
+    target_compatible_with = [
+        "@platforms//os:windows",
+    ],
+    deps = [
+        "//client",
+        "//compat",
+        "//third_party/mini_chromium:base",
+        "//util",
+    ],
+)
+
+cc_binary(
+    name = "crashpad_snapshot_test_extra_memory_ranges",
+    srcs = ["win/crashpad_snapshot_test_extra_memory_ranges.cc"],
+    copts = CRASHPAD_COMMON_COPTS,
+    target_compatible_with = [
+        "@platforms//os:windows",
+    ],
+    deps = [
+        "//client",
+        "//compat",
+        "//third_party/mini_chromium:base",
+    ],
+)
+
+cc_binary(
+    name = "crashpad_snapshot_test_image_reader",
+    srcs = ["win/crashpad_snapshot_test_image_reader.cc"],
+    copts = CRASHPAD_COMMON_COPTS,
+    target_compatible_with = [
+        "@platforms//os:windows",
+    ],
+    deps = [
+        "//client",
+        "//compat",
+        "//third_party/mini_chromium:base",
+        "//util",
+    ],
+)
+
+cc_crashpad_test_module(
+    name = "crashpad_snapshot_test_image_reader_module",
+    srcs = ["win/crashpad_snapshot_test_image_reader_module.cc"],
+    target_compatible_with = [
+        "@platforms//os:windows",
+    ],
+    deps = [
+        "//client",
+        "//third_party/mini_chromium:base",
+    ],
+)
+
+cc_test(
+    name = "crashpad_snapshot_test",
+    srcs = [
+        "cpu_context_test.cc",
+        "memory_snapshot_test.cc",
+        "minidump/process_snapshot_minidump_test.cc",
+    ] + select({
+        "//conditions:default": [],
+        "@platforms//os:linux": [
+            "crashpad_types/crashpad_info_reader_test.cc",
+            "crashpad_types/image_annotation_reader_test.cc",
+            "elf/elf_image_reader_test.cc",
+            "elf/elf_image_reader_test_note.S",
+            "linux/debug_rendezvous_test.cc",
+            "linux/exception_snapshot_linux_test.cc",
+            "linux/process_reader_linux_test.cc",
+            "linux/system_snapshot_linux_test.cc",
+            "linux/test_modules.cc",
+            "linux/test_modules.h",
+            "posix/timezone_test.cc",
+            "sanitized/process_snapshot_sanitized_test.cc",
+            "sanitized/sanitization_information_test.cc",
+        ],
+        "@platforms//os:macos": [
+            "crashpad_info_client_options_test.cc",
+            "mac/cpu_context_mac_test.cc",
+            "mac/mach_o_image_annotations_reader_test.cc",
+            "mac/mach_o_image_reader_test.cc",
+            "mac/mach_o_image_segment_reader_test.cc",
+            "mac/process_reader_mac_test.cc",
+            "mac/process_types_test.cc",
+            "mac/system_snapshot_mac_test.cc",
+            "posix/timezone_test.cc",
+        ],
+        "@platforms//os:windows": [
+            "crashpad_info_client_options_test.cc",
+            "crashpad_types/crashpad_info_reader_test.cc",
+            "win/cpu_context_win_test.cc",
+            "win/exception_snapshot_win_test.cc",
+            "win/extra_memory_ranges_test.cc",
+            "win/module_snapshot_win_test.cc",
+            "win/pe_image_reader_test.cc",
+            "win/process_reader_win_test.cc",
+            "win/process_snapshot_win_test.cc",
+            "win/system_snapshot_win_test.cc",
+        ],
+    }),
+    copts = CRASHPAD_COMMON_COPTS + select({
+        "@platforms//os:windows": ["/wd4201"],
+        "@platforms//os:linux": [],
+        "//conditions:default": [],
+    }),
+    data = [
+        ":crashpad_snapshot_test_module",
+        ":crashpad_snapshot_test_module_large",
+        ":crashpad_snapshot_test_module_small",
+    ] + select({
+        "//conditions:default": [],
+        "@platforms//os:linux": [
+            ":crashpad_snapshot_test_both_dt_hash_styles",
+        ],
+        "@platforms//os:macos": [
+            ":crashpad_snapshot_test_module_crashy_initializer",
+            ":crashpad_snapshot_test_no_op",
+        ],
+        "@platforms//os:windows": [
+            ":crashpad_snapshot_test_annotations",
+            ":crashpad_snapshot_test_crashing_child",
+            ":crashpad_snapshot_test_dump_without_crashing",
+            ":crashpad_snapshot_test_extra_memory_ranges",
+            ":crashpad_snapshot_test_image_reader",
+            ":crashpad_snapshot_test_image_reader_module",
+        ],
+    }),
+    linkopts = select({
+        "@platforms//os:linux": [
+            "-ldl",
+            # Symbols from elf/test_exported_symbols.sym
+            "-Wl,--export-dynamic-symbol=ElfImageReaderTestExportedSymbol",
+        ],
+        "@platforms//os:macos": ["-framework OpenCL"],
+        "@platforms//os:windows": ["-defaultlib:shell32.lib"],
+        "//conditions:default": [],
+    }),
+    # We will not be able to retrieve proper process info on linux in a sandboxed environment
+    # causing test failures.
+    tags = ["no-sandbox"],
+    deps = [
+        ":test_support",
+        "//client:common",
+        "//compat",
+        "//minidump",
+        "//minidump:format",
+        "//test",
+        "//test:googletest_main",
+        "//third_party/mini_chromium:base",
+        "//util",
+        "@com_google_googletest//:gtest",
+    ],
+)
