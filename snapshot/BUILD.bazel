@@ -243,6 +243,7 @@ cc_library(
         "@platforms//os:windows": ["/defaultlib:powrprof.lib"],
         "//conditions:default": [],
     }),
+    visibility = ["//visibility:public"],
     deps = [
         ":context",
         ":headers",

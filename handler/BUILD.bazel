@@ -127,6 +127,7 @@ cc_binary(
             ],
             "//conditions:default": [],
         }),
+    visibility = ["//visibility:public"],
     deps = [
         ":handler",
         "//compat",
