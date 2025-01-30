@@ -108,6 +108,7 @@
 #include <string>
 
 #include "build/build_config.h"
+#include "absl/strings/str_format.h"
 
 // Windows-style drive letter support and pathname separator characters can be
 // enabled and disabled independently, to aid testing.  These #defines are
@@ -118,6 +119,11 @@
 #define FILE_PATH_USES_WIN_SEPARATORS
 #define FILE_PATH_USES_WIDE_CHARACTERS
 #endif  // BUILDFLAG(IS_WIN)
+
+
+#if defined(FILE_PATH_USES_WIDE_CHARACTERS)
+#include "base/strings/utf_string_conversions.h"
+#endif  // FILE_PATH_USES_WIDE_CHARACTERS
 
 namespace base {
 
@@ -212,6 +218,16 @@ class FilePath {
   // a separator character, or with two separator characters.  On POSIX
   // platforms, an absolute path begins with a separator character.
   bool IsAbsolute() const;
+
+
+  template <typename Sink>
+  friend void AbslStringify(Sink& sink, const FilePath& file_path) {
+#ifdef FILE_PATH_USES_WIDE_CHARACTERS
+  sink.Append(base::WideToUTF8(file_path.value()));
+#else
+  sink.Append(file_path.value());
+#endif
+  }
 
  private:
   // Remove trailing separators from this object.  If the path is absolute, it
