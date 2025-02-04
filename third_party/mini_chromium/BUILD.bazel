@@ -13,6 +13,7 @@
 # limitations under the License.
 load("@rules_cc//cc:defs.bzl", "cc_library")
 load("@rules_license//rules:license.bzl", "license")
+load("@rules_cc//cc:defs.bzl", "cc_library")
 
 package(
     default_applicable_licenses = [":license"],
@@ -79,6 +80,7 @@ cc_library(
         "mini_chromium/base/numerics/clamped_math.h",
         "mini_chromium/base/numerics/safe_conversions.h",
         "mini_chromium/base/numerics/safe_math.h",
+        "mini_chromium/base/posix/eintr_wrapper.h",
         "mini_chromium/base/process/memory.h",
         "mini_chromium/base/rand_util.h",
         "mini_chromium/base/scoped_clear_last_error.h",
@@ -106,7 +108,6 @@ cc_library(
         "mini_chromium/build/chromeos_buildflags.h",
     ] + select({
         "@platforms//os:linux": [
-            "mini_chromium/base/posix/eintr_wrapper.h",
             "mini_chromium/base/posix/safe_strerror.h",
             "mini_chromium/base/strings/string_util_posix.h",
         ],
@@ -119,7 +120,6 @@ cc_library(
             "mini_chromium/base/apple/scoped_typeref.h",
             "mini_chromium/base/mac/scoped_ioobject.h",
             "mini_chromium/base/mac/scoped_launch_data.h",
-            "mini_chromium/base/posix/eintr_wrapper.h",
             "mini_chromium/base/posix/safe_strerror.h",
             "mini_chromium/base/strings/string_util_posix.h",
         ],
@@ -166,6 +166,7 @@ cc_library(
         "mini_chromium/base/numerics/safe_math_arm_impl.h",
         "mini_chromium/base/numerics/safe_math_clang_gcc_impl.h",
         "mini_chromium/base/numerics/safe_math_shared_impl.h",
+        "mini_chromium/base/posix/eintr_wrapper.h",
         "mini_chromium/base/process/memory.cc",
         "mini_chromium/base/rand_util.cc",
         "mini_chromium/base/strings/pattern.cc",
@@ -182,7 +183,6 @@ cc_library(
         "@platforms//os:linux": [
             "mini_chromium/base/files/file_util_posix.cc",
             "mini_chromium/base/memory/page_size_posix.cc",
-            "mini_chromium/base/posix/eintr_wrapper.h",
             "mini_chromium/base/posix/safe_strerror.cc",
             "mini_chromium/base/posix/safe_strerror.h",
             "mini_chromium/base/strings/string_util_posix.h",
@@ -205,7 +205,6 @@ cc_library(
             "mini_chromium/base/mac/scoped_ioobject.h",
             "mini_chromium/base/mac/scoped_launch_data.h",
             "mini_chromium/base/memory/page_size_posix.cc",
-            "mini_chromium/base/posix/eintr_wrapper.h",
             "mini_chromium/base/posix/safe_strerror.cc",
             "mini_chromium/base/posix/safe_strerror.h",
             "mini_chromium/base/strings/string_util_posix.h",
