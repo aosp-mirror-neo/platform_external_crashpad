@@ -23,7 +23,7 @@ CRASHPAD_WINDOWS_UNICODE_COPTS = [
 # Keep in sync with config("winver") from Chromium's build/config/win/BUILD.gn:
 # https://source.chromium.org/chromium/chromium/src/+/main:build/config/win/BUILD.gn;l=287;drc=804d5a91d49d0ad79d3d5529e6ba2610225cfe55
 CRASHPAD_WINDOWS_WINVER_COPTS = [
-    "-DNTDDI_VERSION=NTDDI_WIN10_FE",
+    "-DNTDDI_VERSION=0x0A000006",
     "-D_WIN32_WINNT=0x0A00",
     "-DWINVER=0x0A00",
 ]
@@ -140,6 +140,7 @@ def cc_crashpad_test_module(name, **kwargs):
         outs = [name + ".so"],
         testonly = True,
         cmd = "cp $< $(OUTS)",
+        cmd_bat = "copy $< $(OUTS)",
     )
 
     native.genrule(
@@ -148,6 +149,7 @@ def cc_crashpad_test_module(name, **kwargs):
         outs = [name + ".dll"],
         testonly = True,
         cmd = "cp $< $(OUTS)",
+        cmd_bat = "copy $< $(OUTS)",
     )
 
     native.alias(

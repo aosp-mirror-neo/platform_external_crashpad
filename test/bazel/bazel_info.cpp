@@ -13,6 +13,7 @@
 // limitations under the License.
 #include "test/bazel/bazel_info.h"
 
+#include <filesystem>
 #include <iostream>
 #include <memory>
 #include <string_view>
@@ -22,6 +23,8 @@
 #include "base/strings/utf_string_conversions.h"
 
 #include "tools/cpp/runfiles/runfiles.h"
+
+namespace fs = std::filesystem;
 
 namespace crashpad {
 namespace test {
@@ -81,11 +84,7 @@ base::FilePath Bazel::runfilesPath(const std::string& path) {
     }
     location = runfiles->Rlocation(base::StrCat({workspace, "/", path}));
   }
-#if !BUILDFLAG(IS_WIN)
-  return base::FilePath(base::StrCat({location, "/", ".."}));
-#else
-  return base::FilePath(base::UTF8ToWide(base::StrCat({location, "\\", ".."})));
-#endif
+  return base::FilePath(fs::path(location) / "..");
 }
 
 void Bazel::storeCommandLineArgs(int argc, char** argv) {
@@ -97,22 +96,22 @@ void Bazel::storeCommandLineArgs(int argc, char** argv) {
 
 bool Bazel::inBazel() {
   using namespace std::literals::string_view_literals;
-  std::array<std::string_view, 3> markers = {
-      "BUILD_WORKING_DIRECTORY"sv,
-      "TEST_BINARY"sv,
-      "RUNFILES_DIR"sv,
+  std::array<std::string, 3> markers = {
+      "BUILD_WORKING_DIRECTORY",
+      "TEST_BINARY",
+      "RUNFILES_DIR",
   };
 
-#if !BUILDFLAG(IS_WIN)
+#if BUILDFLAG(IS_WIN)
   for (const auto& marker : markers) {
-    if (getenv(marker.data()) != nullptr) {
+    std::wstring wideMarker = base::UTF8ToWide(marker);
+    if (_wgetenv(wideMarker.c_str()) != nullptr) {
       return true;
     }
   }
 #else
   for (const auto& marker : markers) {
-    std::wstring wideMarker = base::UTF8ToWide(marker);
-    if (_wgetenv(wideMarker.c_str()) != nullptr) {
+    if (getenv(marker.c_str()) != nullptr) {
       return true;
     }
   }
