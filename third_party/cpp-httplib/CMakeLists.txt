@@ -1,0 +1,6 @@
+add_library(cpp-httplib INTERFACE)
+target_include_directories(cpp-httplib INTERFACE cpp-httplib)
+target_link_libraries(cpp-httplib INTERFACE ${ZLIB_TARGET})
+if(NOT WIN32)
+  target_link_libraries(cpp-httplib INTERFACE crypto ssl)
+endif()

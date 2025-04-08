@@ -24,6 +24,7 @@
 
 #include <memory>
 #include <string_view>
+#include <iostream>
 
 #include "base/atomicops.h"
 #include "base/check_op.h"
@@ -541,7 +542,8 @@ bool StartHandlerProcess(
       &startup_info.StartupInfo,
       &process_info);
   if (!rv) {
-    PLOG(ERROR) << "CreateProcess";
+    std::wcerr << command_line;
+    PLOG(ERROR) << "CreateProcess: ";
     return false;
   }
 
