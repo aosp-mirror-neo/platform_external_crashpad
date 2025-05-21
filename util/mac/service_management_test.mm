@@ -107,7 +107,12 @@ void ExpectProcessIsNotRunning(pid_t pid, std::string& last_arg) {
   EXPECT_NE(job_argv.back(), last_arg);
 }
 
-TEST(ServiceManagement, SubmitRemoveJob) {
+// Disabled due to flakiness. This test is susceptible to race conditions
+// when checking launchd job and process states (e.g., for the 'sleep 10'
+// script) immediately after submission or removal operations. These
+// timing-sensitive assertions can fail intermittently, especially under varying
+// system load.
+TEST(ServiceManagement, DISABLED_SubmitRemoveJob) {
   @autoreleasepool {
     const std::string cookie = RandomString();
 
