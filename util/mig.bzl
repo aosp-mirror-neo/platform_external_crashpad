@@ -23,6 +23,9 @@ the generated files.
 load("@bazel_skylib//lib:paths.bzl", "paths")
 load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
 load("@rules_cc//cc:find_cc_toolchain.bzl", "find_cc_toolchain", "use_cc_toolchain")
+load("@rules_cc//cc/common:cc_common.bzl", "cc_common")
+
+_MIG_TOOLCHAIN_TYPE = "@//build/bazel/toolchains/cc/mac_clang:mig_toolchain_type"
 
 _mig_suffixes = {
     "user": "User.c",
@@ -88,7 +91,7 @@ def _mig_generate(ctx, defs_file, mig, cc, cc_env, cc_toolchain):
         mnemonic = "GenerateMachInterface",
         outputs = raw_interface.values(),
         progress_message = "Generating Mach interface: %s" % basename,
-        toolchain = ":mig_toolchain_type",
+        toolchain = _MIG_TOOLCHAIN_TYPE,
     )
 
     args = []
@@ -109,7 +112,7 @@ def _mig_generate(ctx, defs_file, mig, cc, cc_env, cc_toolchain):
     return target_interface
 
 def _mig_impl(ctx):
-    mig = ctx.toolchains[":mig_toolchain_type"].tool
+    mig = ctx.toolchains[_MIG_TOOLCHAIN_TYPE].tool
     cc_toolchain = find_cc_toolchain(ctx)
     feature_configuration = cc_common.configure_features(
         ctx = ctx,
@@ -128,6 +131,14 @@ def _mig_impl(ctx):
         variables = cc_variables,
     )
 
+    sdk_srcs = {k: None for k in ctx.attr.sdk_srcs}
+    for lib in ctx.toolchains[_MIG_TOOLCHAIN_TYPE].libs:
+        if lib.basename in sdk_srcs:
+            sdk_srcs[lib.basename] = lib
+    missing_srcs = [k for k, v in sdk_srcs.items() if v == None]
+    if missing_srcs:
+        fail("item(s) from sdk_srcs are not found in the current mig toolchain:", missing_srcs)
+
     output_files = []
 
     src_files = []
@@ -135,7 +146,7 @@ def _mig_impl(ctx):
     client_files = []
     server_files = []
 
-    for defs_file in ctx.files.srcs:
+    for defs_file in ctx.files.srcs + sdk_srcs.values():
         result_files = _mig_generate(ctx, defs_file, mig, cc, cc_env, cc_toolchain)
         output_files.extend(result_files.values())
         for target, result_file in result_files.items():
@@ -180,6 +191,9 @@ mig = rule(
             allow_files = True,
             mandatory = True,
         ),
+        "sdk_srcs": attr.string_list(
+            doc = "MIG definition filenames to add from macOS SDK.",
+        ),
         "included_srcs": attr.label_list(
             doc = "Additional MIG definition files (.defs). These are passed to " +
                   "the MIG tool, but are not considered outputs of this rule. " +
@@ -209,5 +223,5 @@ mig = rule(
     fragments = ["cpp"],
     implementation = _mig_impl,
     output_to_genfiles = True,
-    toolchains = use_cc_toolchain() + [":mig_toolchain_type"],
+    toolchains = use_cc_toolchain() + [_MIG_TOOLCHAIN_TYPE],
 )

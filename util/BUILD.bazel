@@ -11,6 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+load("@rules_cc//cc:objc_library.bzl", "objc_library")
+load("@rules_python//python:defs.bzl", "py_binary")
 load("//:copts.bzl", "CRASHPAD_COMMON_COPTS", "cc_crashpad_test_module")
 load("mig.bzl", "mig")
 
@@ -21,21 +27,6 @@ package(
         "//:__subpackages__",
         "//:clients",
     ],
-)
-
-toolchain_type(name = "mig_toolchain_type")
-
-toolchain(
-    name = "mig_toolchain",
-    exec_compatible_with = [
-        "@platforms//os:macos",
-        "@bazel_tools//tools/cpp:clang",
-    ],
-    target_compatible_with = [
-        "@platforms//os:macos",
-    ],
-    toolchain = "@xcode_tools//:mig",
-    toolchain_type = ":mig_toolchain_type",
 )
 
 py_binary(
@@ -51,11 +42,11 @@ py_binary(
 
 mig(
     name = "mac_mig_gen",
-    srcs = [
-        "mach/child_port.defs",
-        "@xcode_tools//:SDKs/MacOSX.sdk/usr/include/mach/exc.defs",
-        "@xcode_tools//:SDKs/MacOSX.sdk/usr/include/mach/mach_exc.defs",
-        "@xcode_tools//:SDKs/MacOSX.sdk/usr/include/mach/notify.defs",
+    srcs = ["mach/child_port.defs"],
+    sdk_srcs = [
+        "exc.defs",
+        "mach_exc.defs",
+        "notify.defs",
     ],
 )
 
