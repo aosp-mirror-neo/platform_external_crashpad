@@ -624,7 +624,7 @@ objc_library(
     deps = [
         ":util",
         "//:internal",
-        "@com_google_googletest//:gtest",
+        "@googletest//:gtest",
     ],
 )
 
@@ -683,7 +683,7 @@ cc_test(
         "//test",
         "//test:googletest_main",
         "//third_party/mini_chromium:base",
-        "@com_google_googletest//:gtest",
+        "@googletest//:gtest",
     ] + select({
         "@platforms//os:macos": [":crashpad_util_test_apple"],
         "//conditions:default": [

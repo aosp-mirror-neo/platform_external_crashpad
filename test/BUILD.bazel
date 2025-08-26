@@ -114,7 +114,7 @@ cc_library(
         "//third_party/mini_chromium:base",
         "//util",
         "@bazel_tools//tools/cpp/runfiles",
-        "@com_google_googletest//:gtest",
+        "@googletest//:gtest",
     ],
 )
 
@@ -167,7 +167,7 @@ cc_library(
     deps = [
         ":test",
         "//third_party/mini_chromium:base",
-        "@com_google_googletest//:gtest",
+        "@googletest//:gtest",
     ] + select({
         "//conditions:default": [],
     }),
@@ -183,7 +183,7 @@ cc_library(
     deps = [
         ":test",
         "//third_party/mini_chromium:base",
-        "@com_google_googletest//:gtest",
+        "@googletest//:gtest",
     ] + select({
         "//conditions:default": [],
     }),

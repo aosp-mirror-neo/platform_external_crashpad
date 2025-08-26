@@ -185,7 +185,7 @@ cc_test(
         "//test:googlemock_main",
         "//third_party/mini_chromium:base",
         "//util",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 

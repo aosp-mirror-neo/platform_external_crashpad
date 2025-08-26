@@ -241,6 +241,6 @@ cc_test(
         "//test:googletest_main",
         "//third_party/mini_chromium:base",
         "//util",
-        "@com_google_googletest//:gtest",
+        "@googletest//:gtest",
     ],
 )

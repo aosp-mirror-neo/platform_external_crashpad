@@ -129,7 +129,7 @@ cc_library(
         "//conditions:default": [],
     }),
     includes = ["mini_chromium"],
-    deps = ["@com_google_absl//absl/strings:str_format"],
+    deps = ["@abseil-cpp//absl/strings:str_format"],
 )
 
 objc_library(
