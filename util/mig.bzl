@@ -25,7 +25,7 @@ load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
 load("@rules_cc//cc:find_cc_toolchain.bzl", "find_cc_toolchain", "use_cc_toolchain")
 load("@rules_cc//cc/common:cc_common.bzl", "cc_common")
 
-_MIG_TOOLCHAIN_TYPE = "@//build/bazel/toolchains/cc/mac_clang:mig_toolchain_type"
+_MIG_TOOLCHAIN_TYPE = "@goldfish_build//toolchains/cc/mac_clang:mig_toolchain_type"
 
 _mig_suffixes = {
     "user": "User.c",

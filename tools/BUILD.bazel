@@ -73,7 +73,7 @@ cc_binary(
         "//third_party/mini_chromium:base",
         "//util",
     ] + select({
-        "//build/bazel/platforms/os:mac": [
+        "@platforms//os:macos": [
             "//util:util_mac",
         ],
         "//conditions:default": [],
@@ -89,7 +89,7 @@ cc_binary(
         "//third_party/mini_chromium:base",
         "//util",
     ] + select({
-        "//build/bazel/platforms/os:mac": [
+        "@platforms//os:macos": [
             "//util:util_mac",
         ],
         "//conditions:default": [],
