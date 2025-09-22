@@ -225,7 +225,7 @@ cc_library(
     copts = copts,
     linkopts = select({
         "@platforms//os:windows": [
-            "advapi32.lib",
+            "-defaultlib:advapi32.lib",
         ],
         "@platforms//os:macos": [
             "-framework CoreFoundation",
