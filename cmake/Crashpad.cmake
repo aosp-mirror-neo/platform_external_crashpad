@@ -288,6 +288,10 @@ function(crashpad_library)
   endif()
 
   if(APPLE)
+    target_compile_options(
+        ${CRASHPAD_LIB_TARGET}
+        PRIVATE # Workaround for toolchain expecting stddef.h to be included
+                -include stddef.h)
     if(CRASHPAD_LIB_APPLE)
       target_sources(${CRASHPAD_LIB_TARGET} PRIVATE ${CRASHPAD_LIB_APPLE})
     endif()
@@ -354,6 +358,10 @@ function(crashpad_binary)
   endif()
 
   if(APPLE)
+    target_compile_options(
+        ${CRASHPAD_BIN_TARGET}
+        PRIVATE # Workaround for toolchain expecting stddef.h to be included
+                -include stddef.h)
     if(CRASHPAD_BIN_APPLE)
       target_sources(${CRASHPAD_BIN_TARGET} PRIVATE ${CRASHPAD_BIN_APPLE})
     endif()
