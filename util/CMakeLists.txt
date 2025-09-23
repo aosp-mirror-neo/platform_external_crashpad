@@ -228,7 +228,7 @@ crashpad_binary(
   DEPS cpp-httplib crashpad_internal crashpad_net crashpad_tool_support
        crashpad_util mini_chromium)
 
-crashpad_binary(
+crashpad_test(
   TARGET crashpad_util_test
   SRC file/delimited_file_reader_test.cc
       file/directory_reader_test.cc
@@ -327,17 +327,18 @@ crashpad_binary(
         win/safe_terminate_process_test.cc
         win/scoped_process_suspend_test.cc
         win/session_end_watcher_test.cc
+  ARGS "${CRASHPAD_UTIL_PARAMS}"
   DEPS ${ZLIB_TARGET}
        crashpad_compat
        crashpad_compat
-       crashpad_googletest_main
        crashpad_internal
        crashpad_net
        crashpad_test
        crashpad_util
        gmock
        gtest
-       mini_chromium)
+       mini_chromium
+  ENVIRONMENT "CRASHPAD_TEST_DATA_ROOT=${CRASHPAD_TEST_DATA_ROOT}")
 
 if(WIN32)
   target_link_libraries(crashpad_util_test PRIVATE dbghelp::dbghelp
@@ -353,9 +354,4 @@ if(WIN32)
     TARGET crashpad_util_test_loader_lock_test SRC win/loader_lock_test_dll.cc
     DEPS crashpad_internal crashpad_util TEST crashpad_util_test)
 endif()
-add_test(NAME crashpad_util_test COMMAND crashpad_util_test
-                                         "${CRASHPAD_UTIL_PARAMS}"
-         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-set_property(
-  TEST crashpad_util_test APPEND
-  PROPERTY ENVIRONMENT "CRASHPAD_TEST_DATA_ROOT=${CRASHPAD_TEST_DATA_ROOT}")
+

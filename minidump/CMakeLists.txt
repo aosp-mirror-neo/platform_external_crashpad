@@ -47,7 +47,7 @@ crashpad_library(
   DEPS crashpad_internal crashpad_minidump crashpad_snapshot crashpad_test
        crashpad_util gmock)
 
-crashpad_binary(
+crashpad_test(
   TARGET crashpad_minidump_test
   SRC minidump_annotation_writer_test.cc
       minidump_byte_array_writer_test.cc
@@ -71,13 +71,9 @@ crashpad_binary(
       minidump_unloaded_module_writer_test.cc
       minidump_user_stream_writer_test.cc
       minidump_writable_test.cc
-  DEPS crashpad_googletest_main
-       crashpad_handler_lib
+  DEPS crashpad_handler_lib
        crashpad_internal
        crashpad_minidump_test_support
        crashpad_snapshot_test_support
        gmock
        mini_chromium)
-
-add_test(NAME crashpad_minidump_test COMMAND crashpad_minidump_test
-         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})

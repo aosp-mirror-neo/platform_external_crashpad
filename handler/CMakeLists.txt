@@ -37,15 +37,12 @@ if(CRASHPAD_INSTALL_HANDLER)
   install(TARGETS crashpad_handler RUNTIME DESTINATION .)
 endif()
 
-crashpad_binary(
+crashpad_test(
   TARGET crashpad_handler_test
   SRC minidump_to_upload_parameters_test.cc
   WIN32 crashpad_handler_test.cc
-  DEPS crashpad_googletest_main crashpad_handler_lib crashpad_internal
+  DEPS crashpad_handler_lib crashpad_internal
        crashpad_snapshot crashpad_snapshot_test_support gmock)
-
-add_test(NAME crashpad_handler_test COMMAND crashpad_handler_test
-         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 crashpad_binary(
   TARGET crashpad_handler_test_extended_handler

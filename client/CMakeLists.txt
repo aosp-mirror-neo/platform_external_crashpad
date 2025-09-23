@@ -37,7 +37,7 @@ target_link_libraries(crashpad_client_common PRIVATE crashpad_client)
 # ===============================================================================
 # Target: crashpad_client_test
 # ===============================================================================
-crashpad_binary(
+crashpad_test(
   TARGET crashpad_client_test
   SRC annotation_list_test.cc
       annotation_test.cc
@@ -51,15 +51,9 @@ crashpad_binary(
   LINUX crashpad_client_linux_test.cc
   WIN32 crashpad_client_win_test.cc
   DEPS crashpad_client
-       crashpad_googletest_main
        crashpad_handler_lib
        crashpad_internal
        crashpad_test
        crashpad_util
        gmock)
 
-# ===============================================================================
-# Test: crashpad_client_test
-# ===============================================================================
-add_test(NAME crashpad_client_test COMMAND crashpad_client_test
-         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})

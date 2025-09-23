@@ -59,15 +59,12 @@ crashpad_binary(
   SRC multiprocess_exec_test_child.cc DEPS crashpad_compat crashpad_internal
                                            mini_chromium)
 
-crashpad_binary(
+crashpad_test(
   TARGET crashpad_test_test
   SRC hex_string_test.cc main_arguments_test.cc multiprocess_exec_test.cc
       scoped_guarded_page_test.cc scoped_temp_dir_test.cc test_paths_test.cc
   POSIX multiprocess_posix_test.cc
-  DEPS crashpad_compat crashpad_googletest_main crashpad_internal crashpad_test
+  DEPS crashpad_compat crashpad_internal crashpad_test
        gtest)
 add_dependencies(crashpad_test_test
                  crashpad_test_test_multiprocess_exec_test_child)
-
-add_test(NAME crashpad_test_test COMMAND crashpad_test_test
-         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})

@@ -14,29 +14,29 @@
 
 # Crashpad.cmake
 #
-# Provides functions to create Crashpad libraries and executables.
-# This file defines the following functions:
-#   - mig_lib: Generates and compiles MIG (Mach Interface Generator) files.
-#   - android_add_library: Wrapper for add_library (shim for non-Android builds).
-#   - android_add_executable: Wrapper for add_executable (shim for non-Android builds).
-#   - crashpad_set_common_properties: Sets common properties for Crashpad targets.
-#   - crashpad_library: Creates a Crashpad library target.
-#   - crashpad_binary: Creates a Crashpad executable target.
-#   - crashpad_test_module: Creates a Crashpad test module (shared library).
-#   - masm_compile: Compiles MASM assembly files into object files (Windows-specific).
-#   - android_find_windows_library: Wrapper for find_library on Windows.
+# Provides functions to create Crashpad libraries and executables. This file
+# defines the following functions: - mig_lib: Generates and compiles MIG (Mach
+# Interface Generator) files. - android_add_library: Wrapper for add_library
+# (shim for non-Android builds). - android_add_executable: Wrapper for
+# add_executable (shim for non-Android builds). -
+# crashpad_set_common_properties: Sets common properties for Crashpad targets. -
+# crashpad_library: Creates a Crashpad library target. - crashpad_binary:
+# Creates a Crashpad executable target. - crashpad_test_module: Creates a
+# Crashpad test module (shared library). - masm_compile: Compiles MASM assembly
+# files into object files (Windows-specific). - android_find_windows_library:
+# Wrapper for find_library on Windows.
 #
 
-# Generates Mach Interface Generator (MIG) files and compiles them into a library.
+# Generates Mach Interface Generator (MIG) files and compiles them into a
+# library.
 #
 # This function generates C source and header files from Mach interface
 # definitions using the `mig.py` script. It then compiles these generated files
 # into a library.
 #
-# Args:
-#   TARGET: The name of the library target (Required).
-#   SRC: List of Mach interface definition files (.defs) (Required).
-#   GENERATED: (Optional) Output variable to store the list of generated source files.
+# Args: TARGET: The name of the library target (Required). SRC: List of Mach
+# interface definition files (.defs) (Required). GENERATED: (Optional) Output
+# variable to store the list of generated source files.
 #
 function(mig_lib)
   set(options)
@@ -106,35 +106,33 @@ function(mig_lib)
   target_link_libraries(${mig_TARGET} PRIVATE crashpad_compat crashpad_internal)
 
   if(mig_GENERATED)
-    set(${mig_GENERATED}
-        ${mig_GEN}
-        PARENT_SCOPE)
+    set(${mig_GENERATED} ${mig_GEN} PARENT_SCOPE)
   endif()
 endfunction()
-
 
 # ===============================================================================
 # Wrapper for add_library, a shim when building outside the Android emulator.
 #
-# Args:
-#   TARGET: The name of the target (Required).
-#   LICENSE: The license of the target (Required).
-#   SHARED: If set, the target will be a shared library.
-#   SRC: A list of source files.
-#   DEPS: A list of private dependencies.
+# Args: TARGET: The name of the target (Required). LICENSE: The license of the
+# target (Required). SHARED: If set, the target will be a shared library. SRC: A
+# list of source files. DEPS: A list of private dependencies.
 # ===============================================================================
 if(NOT COMMAND android_add_library)
   function(android_add_library)
     set(options SHARED)
     set(oneValueArgs TARGET LICENSE)
     set(multiValueArgs DEPS SRC)
-    cmake_parse_arguments(ANDROID_LIB "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+    cmake_parse_arguments(ANDROID_LIB "${options}" "${oneValueArgs}"
+                          "${multiValueArgs}" ${ARGN})
     if(NOT DEFINED ANDROID_LIB_TARGET)
       message(FATAL_ERROR "TARGET must be defined for android_add_library.")
     endif()
 
     if(NOT DEFINED ANDROID_LIB_LICENSE)
-      message(FATAL_ERROR "LICENSE must be defined for android_add_library. Target: ${ANDROID_LIB_TARGET}")
+      message(
+        FATAL_ERROR
+          "LICENSE must be defined for android_add_library. Target: ${ANDROID_LIB_TARGET}"
+      )
     endif()
 
     if(${ANDROID_LIB_SHARED})
@@ -144,7 +142,8 @@ if(NOT COMMAND android_add_library)
     endif()
 
     if(LINUX)
-      target_link_options(${ANDROID_LIB_TARGET} PRIVATE "LINKER:--build-id=sha1")
+      target_link_options(${ANDROID_LIB_TARGET} PRIVATE
+                          "LINKER:--build-id=sha1")
     endif()
 
     target_sources(${ANDROID_LIB_TARGET} PRIVATE ${ANDROID_LIB_SRC})
@@ -156,31 +155,34 @@ endif()
 # ===============================================================================
 # Wrapper for add_executable, a shim when building outside the Android emulator.
 #
-# Args:
-#   TARGET: The name of the target (Required).
-#   LICENSE: The license of the target (Required).
-#   SRC: A list of source files.
-#   DEPS: A list of private dependencies.
+# Args: TARGET: The name of the target (Required). LICENSE: The license of the
+# target (Required). SRC: A list of source files. DEPS: A list of private
+# dependencies.
 # ===============================================================================
 if(NOT COMMAND android_add_executable)
   function(android_add_executable)
     set(options)
     set(oneValueArgs TARGET LICENSE)
     set(multiValueArgs DEPS SRC)
-    cmake_parse_arguments(ANDROID_EXE "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+    cmake_parse_arguments(ANDROID_EXE "${options}" "${oneValueArgs}"
+                          "${multiValueArgs}" ${ARGN})
     if(NOT DEFINED ANDROID_EXE_TARGET)
       message(FATAL_ERROR "TARGET must be defined for android_add_executable.")
     endif()
 
     if(NOT DEFINED ANDROID_EXE_LICENSE)
-      message(FATAL_ERROR "LICENSE must be defined for android_add_executable. Target: ${ANDROID_EXE_TARGET}")
+      message(
+        FATAL_ERROR
+          "LICENSE must be defined for android_add_executable. Target: ${ANDROID_EXE_TARGET}"
+      )
     endif()
 
     add_executable(${ANDROID_EXE_TARGET} ${ANDROID_EXE_SRC})
     target_link_libraries(${ANDROID_EXE_TARGET} PRIVATE ${ANDROID_EXE_DEPS})
 
     if(LINUX)
-      target_link_options(${ANDROID_EXE_TARGET} PRIVATE "LINKER:--build-id=sha1")
+      target_link_options(${ANDROID_EXE_TARGET} PRIVATE
+                          "LINKER:--build-id=sha1")
     endif()
   endfunction()
 endif()
@@ -188,22 +190,19 @@ endif()
 # ===============================================================================
 # Sets common properties for Crashpad targets.
 #
-# This function sets the following properties:
-#   - POSITION_INDEPENDENT_CODE: ON
-#   - CXX_STANDARD: 20
-#   - CXX_STANDARD_REQUIRED: ON
-#   - CXX_EXTENSIONS: OFF
+# This function sets the following properties: - POSITION_INDEPENDENT_CODE: ON -
+# CXX_STANDARD: 20 - CXX_STANDARD_REQUIRED: ON - CXX_EXTENSIONS: OFF
 #
-# Additionally, it sets platform-specific compile options:
-#   - WIN32: Sets various definitions to ensure a clean Windows build.
-#   - Other: Adds various warning suppressions and disables exceptions.
+# Additionally, it sets platform-specific compile options: - WIN32: Sets various
+# definitions to ensure a clean Windows build. - Other: Adds various warning
+# suppressions and disables exceptions.
 #
-# Args:
-#   target: The name of the target.
+# Args: target: The name of the target.
 # ===============================================================================
 function(crashpad_set_common_properties target)
-  set_target_properties(${target} PROPERTIES POSITION_INDEPENDENT_CODE ON CXX_STANDARD 20 CXX_STANDARD_REQUIRED ON
-                                             CXX_EXTENSIONS OFF)
+  set_target_properties(
+    ${target} PROPERTIES POSITION_INDEPENDENT_CODE ON CXX_STANDARD 20
+                         CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF)
 
   if(WIN32)
     target_compile_options(${target} PRIVATE "/EHs-c-")
@@ -235,12 +234,14 @@ function(crashpad_set_common_properties target)
     get_target_property(current_link_libs ${target} LINK_LIBRARIES)
     if(current_link_libs)
       list(REMOVE_ITEM current_link_libs msvc-posix-compat)
-      set_target_properties(${target} PROPERTIES LINK_LIBRARIES "${current_link_libs}")
+      set_target_properties(${target} PROPERTIES LINK_LIBRARIES
+                                                 "${current_link_libs}")
       message(STATUS "Removed msvc-posix-compat from target: ${target}")
     endif()
   else()
-    target_compile_options(${target} PRIVATE
-              -Wno-missing-field-initializers
+    target_compile_options(
+      ${target}
+      PRIVATE -Wno-missing-field-initializers
               -fno-exceptions
               -Wno-multichar
               -Wno-attributes
@@ -254,32 +255,35 @@ endfunction()
 # Creates a Crashpad library target.
 #
 # This function creates a library target with the given name and sources, and
-# sets common Crashpad properties using `crashpad_set_common_properties()`.
-# It also adds platform-specific sources if the corresponding parameters are
+# sets common Crashpad properties using `crashpad_set_common_properties()`. It
+# also adds platform-specific sources if the corresponding parameters are
 # provided. It links `crashpad_compat` as a public dependency by default.
 #
-# Args:
-#   TARGET: The name of the library target (Required).
-#   SRC: A list of common source files.
-#   APPLE: A list of Apple-specific source files (Optional).
-#   LINUX: A list of Linux-specific source files (Optional).
-#   WIN32: A list of Windows-specific source files (Optional).
-#   POSIX: A list of POSIX-specific source files (for Linux and Apple) (Optional).
-#   DEPS: A list of private dependencies (Optional).
+# Args: TARGET: The name of the library target (Required). SRC: A list of common
+# source files. APPLE: A list of Apple-specific source files (Optional). LINUX:
+# A list of Linux-specific source files (Optional). WIN32: A list of
+# Windows-specific source files (Optional). POSIX: A list of POSIX-specific
+# source files (for Linux and Apple) (Optional). DEPS: A list of private
+# dependencies (Optional).
 # ===============================================================================
 function(crashpad_library)
-  cmake_parse_arguments(CRASHPAD_LIB "" "TARGET" "SRC;APPLE;LINUX;WIN32;POSIX;DEPS" ${ARGN})
+  cmake_parse_arguments(CRASHPAD_LIB "" "TARGET"
+                        "SRC;APPLE;LINUX;WIN32;POSIX;DEPS" ${ARGN})
 
   if(NOT CRASHPAD_LIB_TARGET)
     message(FATAL_ERROR "TARGET must be specified for crashpad_library")
   endif()
 
-  if(NOT CRASHPAD_LIB_SRC AND NOT CRASHPAD_LIB_APPLE AND NOT CRASHPAD_LIB_LINUX AND NOT CRASHPAD_LIB_WIN32 AND NOT CRASHPAD_LIB_POSIX)
-    message(FATAL_ERROR "At least one source file (SRC, APPLE, LINUX, WIN32, or POSIX) must be specified for crashpad_library")
+  if(NOT CRASHPAD_LIB_SRC AND NOT CRASHPAD_LIB_APPLE AND NOT CRASHPAD_LIB_LINUX
+     AND NOT CRASHPAD_LIB_WIN32 AND NOT CRASHPAD_LIB_POSIX)
+    message(
+      FATAL_ERROR
+        "At least one source file (SRC, APPLE, LINUX, WIN32, or POSIX) must be specified for crashpad_library"
+    )
   endif()
 
-
-  android_add_library(TARGET ${CRASHPAD_LIB_TARGET} LICENSE "Apache-2.0" SRC ${CRASHPAD_LIB_SRC})
+  android_add_library(TARGET ${CRASHPAD_LIB_TARGET} LICENSE "Apache-2.0"
+                      SRC ${CRASHPAD_LIB_SRC})
 
   crashpad_set_common_properties(${CRASHPAD_LIB_TARGET})
 
@@ -320,28 +324,31 @@ endfunction()
 # It also adds platform-specific sources if the corresponding parameters are
 # provided.
 #
-# Args:
-#   TARGET: The name of the executable target (Required).
-#   SRC: A list of common source files.
-#   APPLE: A list of Apple-specific source files (Optional).
-#   LINUX: A list of Linux-specific source files (Optional).
-#   WIN32: A list of Windows-specific source files (Optional).
-#   POSIX: A list of POSIX-specific source files (for Linux and Apple) (Optional).
-#   DEPS: A list of private dependencies (Optional).
+# Args: TARGET: The name of the executable target (Required). SRC: A list of
+# common source files. APPLE: A list of Apple-specific source files (Optional).
+# LINUX: A list of Linux-specific source files (Optional). WIN32: A list of
+# Windows-specific source files (Optional). POSIX: A list of POSIX-specific
+# source files (for Linux and Apple) (Optional). DEPS: A list of private
+# dependencies (Optional).
 # ===============================================================================
 function(crashpad_binary)
-  cmake_parse_arguments(CRASHPAD_BIN "" "TARGET" "SRC;APPLE;LINUX;WIN32;POSIX;DEPS" ${ARGN})
+  cmake_parse_arguments(CRASHPAD_BIN "" "TARGET"
+                        "SRC;APPLE;LINUX;WIN32;POSIX;DEPS" ${ARGN})
 
   if(NOT CRASHPAD_BIN_TARGET)
     message(FATAL_ERROR "TARGET must be specified for crashpad_binary")
   endif()
 
-
-  if(NOT CRASHPAD_BIN_SRC AND NOT CRASHPAD_BIN_APPLE AND NOT CRASHPAD_BIN_LINUX AND NOT CRASHPAD_BIN_WIN32 AND NOT CRASHPAD_BIN_POSIX)
-    message(FATAL_ERROR "At least one source file (SRC, APPLE, LINUX, WIN32, or POSIX) must be specified for crashpad_binary")
+  if(NOT CRASHPAD_BIN_SRC AND NOT CRASHPAD_BIN_APPLE AND NOT CRASHPAD_BIN_LINUX
+     AND NOT CRASHPAD_BIN_WIN32 AND NOT CRASHPAD_BIN_POSIX)
+    message(
+      FATAL_ERROR
+        "At least one source file (SRC, APPLE, LINUX, WIN32, or POSIX) must be specified for crashpad_binary"
+    )
   endif()
 
-  android_add_executable(TARGET ${CRASHPAD_BIN_TARGET} LICENSE "Apache-2.0" SRC ${CRASHPAD_BIN_SRC})
+  android_add_executable(TARGET ${CRASHPAD_BIN_TARGET} LICENSE "Apache-2.0"
+                         SRC ${CRASHPAD_BIN_SRC})
   add_custom_command(
     TARGET ${CRASHPAD_BIN_TARGET} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${CRASHPAD_BIN_TARGET}>
@@ -374,47 +381,43 @@ function(crashpad_binary)
   endif()
 endfunction()
 
-#===============================================================================
+# ===============================================================================
 # Creates a Crashpad test module target.
 #
-# This function creates a shared library target intended for use in tests.
-# It sets the appropriate properties for a test module, including:
-# - Shared library type
-# - Position independent code
-# - C++ standard 20
-# - .so suffix and empty prefix (for Unix-like systems)
+# This function creates a shared library target intended for use in tests. It
+# sets the appropriate properties for a test module, including: - Shared library
+# type - Position independent code - C++ standard 20 - .so suffix and empty
+# prefix (for Unix-like systems)
 #
-# Args:
-#   TARGET: The name of the test module target.
-#   TEST: The name of the test target that this module belongs to. The function
-#         will automatically add a dependency between the test target and this
-#         module (optional).
-#   SRC: A list of common source files.
-#   APPLE: A list of Apple-specific source files (optional).
-#   LINUX: A list of Linux-specific source files (optional).
-#   WIN32: A list of Windows-specific source files (optional).
-#   POSIX: A list of POSIX-specific source files (Linux and Apple) (optional).
-#   DEPS: A list of private dependencies (optional).
-#===============================================================================
+# Args: TARGET: The name of the test module target. TEST: The name of the test
+# target that this module belongs to. The function will automatically add a
+# dependency between the test target and this module (optional). SRC: A list of
+# common source files. APPLE: A list of Apple-specific source files (optional).
+# LINUX: A list of Linux-specific source files (optional). WIN32: A list of
+# Windows-specific source files (optional). POSIX: A list of POSIX-specific
+# source files (Linux and Apple) (optional). DEPS: A list of private
+# dependencies (optional).
+# ===============================================================================
 function(crashpad_test_module)
-  cmake_parse_arguments(CRASHPAD_TEST_MOD
-    ""
-    "TARGET;TEST"
-    "SRC;APPLE;LINUX;WIN32;POSIX;DEPS"
-    ${ARGN}
-  )
+  cmake_parse_arguments(CRASHPAD_TEST_MOD "" "TARGET;TEST"
+                        "SRC;APPLE;LINUX;WIN32;POSIX;DEPS" ${ARGN})
 
   if(NOT CRASHPAD_TEST_MOD_TARGET)
     message(FATAL_ERROR "TARGET must be specified for crashpad_test_module")
   endif()
 
-  if(NOT CRASHPAD_TEST_MOD_SRC AND NOT CRASHPAD_TEST_MOD_APPLE AND NOT CRASHPAD_TEST_MOD_LINUX AND NOT CRASHPAD_TEST_MOD_WIN32 AND NOT CRASHPAD_TEST_MOD_POSIX)
-    message(FATAL_ERROR "At least one source file (SRC, APPLE, LINUX, WIN32, or POSIX) must be specified for crashpad_test_module")
+  if(NOT CRASHPAD_TEST_MOD_SRC AND NOT CRASHPAD_TEST_MOD_APPLE
+     AND NOT CRASHPAD_TEST_MOD_LINUX AND NOT CRASHPAD_TEST_MOD_WIN32
+     AND NOT CRASHPAD_TEST_MOD_POSIX)
+    message(
+      FATAL_ERROR
+        "At least one source file (SRC, APPLE, LINUX, WIN32, or POSIX) must be specified for crashpad_test_module"
+    )
   endif()
 
   # Use android_add_library with SHARED option to create a shared library
-  android_add_library(TARGET ${CRASHPAD_TEST_MOD_TARGET} LICENSE "Apache-2.0" SHARED
-                      SRC ${CRASHPAD_TEST_MOD_SRC})
+  android_add_library(TARGET ${CRASHPAD_TEST_MOD_TARGET} LICENSE "Apache-2.0"
+                      SHARED SRC ${CRASHPAD_TEST_MOD_SRC})
   add_custom_command(
     TARGET ${CRASHPAD_TEST_MOD_TARGET} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${CRASHPAD_TEST_MOD_TARGET}>
@@ -422,39 +425,40 @@ function(crashpad_test_module)
 
   crashpad_set_common_properties(${CRASHPAD_TEST_MOD_TARGET})
 
-  if (WIN32)
-    set_target_properties(${CRASHPAD_TEST_MOD_TARGET} PROPERTIES
-      SUFFIX ".dll"
-      PREFIX ""
-    )
+  if(WIN32)
+    set_target_properties(${CRASHPAD_TEST_MOD_TARGET} PROPERTIES SUFFIX ".dll"
+                                                                 PREFIX "")
   else()
-    set_target_properties(${CRASHPAD_TEST_MOD_TARGET} PROPERTIES
-      SUFFIX ".so"
-      PREFIX ""
-    )
+    set_target_properties(${CRASHPAD_TEST_MOD_TARGET} PROPERTIES SUFFIX ".so"
+                                                                 PREFIX "")
   endif()
 
   if(CRASHPAD_TEST_MOD_DEPS)
-    target_link_libraries(${CRASHPAD_TEST_MOD_TARGET} PRIVATE ${CRASHPAD_TEST_MOD_DEPS})
+    target_link_libraries(${CRASHPAD_TEST_MOD_TARGET}
+                          PRIVATE ${CRASHPAD_TEST_MOD_DEPS})
   endif()
 
   # Add platform-specific sources
   if(APPLE)
     if(CRASHPAD_TEST_MOD_APPLE)
-      target_sources(${CRASHPAD_TEST_MOD_TARGET} PRIVATE ${CRASHPAD_TEST_MOD_APPLE})
+      target_sources(${CRASHPAD_TEST_MOD_TARGET}
+                     PRIVATE ${CRASHPAD_TEST_MOD_APPLE})
     endif()
   elseif(LINUX)
     if(CRASHPAD_TEST_MOD_LINUX)
-      target_sources(${CRASHPAD_TEST_MOD_TARGET} PRIVATE ${CRASHPAD_TEST_MOD_LINUX})
+      target_sources(${CRASHPAD_TEST_MOD_TARGET}
+                     PRIVATE ${CRASHPAD_TEST_MOD_LINUX})
     endif()
   elseif(WIN32)
     if(CRASHPAD_TEST_MOD_WIN32)
-      target_sources(${CRASHPAD_TEST_MOD_TARGET} PRIVATE ${CRASHPAD_TEST_MOD_WIN32})
+      target_sources(${CRASHPAD_TEST_MOD_TARGET}
+                     PRIVATE ${CRASHPAD_TEST_MOD_WIN32})
     endif()
   endif()
 
   if(UNIX)
-    target_sources(${CRASHPAD_TEST_MOD_TARGET} PRIVATE ${CRASHPAD_TEST_MOD_POSIX})
+    target_sources(${CRASHPAD_TEST_MOD_TARGET}
+                   PRIVATE ${CRASHPAD_TEST_MOD_POSIX})
   endif()
 
   # Add dependency to the test target if TEST is specified
@@ -463,30 +467,27 @@ function(crashpad_test_module)
   endif()
 endfunction()
 
-
 if(NOT COMMAND masm_compile)
   # ==============================================================================
   # Compiles MASM assembly files into object files (Windows-specific).
   #
   # This function compiles each source file (.asm) using the Microsoft Assembler
-  # (MASM) into an object file (.obj). It then adds the generated object files as
-  # private link dependencies to the specified target.
+  # (MASM) into an object file (.obj). It then adds the generated object files
+  # as private link dependencies to the specified target.
   #
-  # Args:
-  #   TARGET: The name of the target to which the compiled object files will be
-  #           linked (Required).
-  #   SRC: A list of MASM assembly source files (.asm) to compile.
+  # Args: TARGET: The name of the target to which the compiled object files will
+  # be linked (Required). SRC: A list of MASM assembly source files (.asm) to
+  # compile.
   # ==============================================================================
   function(masm_compile)
-  set(options)
-  set(oneValueArgs TARGET)
-  set(multiValueArgs SRC)
-  cmake_parse_arguments(MASM "${options}" "${oneValueArgs}" "${multiValueArgs}"
-                        ${ARGN})
-  target_sources(${MASM_TARGET} PRIVATE ${OBJ_OUTPUT_PATH})
-endfunction()
+    set(options)
+    set(oneValueArgs TARGET)
+    set(multiValueArgs SRC)
+    cmake_parse_arguments(MASM "${options}" "${oneValueArgs}"
+                          "${multiValueArgs}" ${ARGN})
+    target_sources(${MASM_TARGET} PRIVATE ${OBJ_OUTPUT_PATH})
+  endfunction()
 endif()
-
 
 # ==============================================================================
 # Wrapper for find_library, specifically for Windows libraries.
@@ -494,12 +495,11 @@ endif()
 # This function serves as a helper, particularly on Windows, to locate a
 # specified library and create an imported interface library target for it. This
 # simplifies linking against standard Windows libraries. It tries to find a
-# library. If found, it generates an interface target that other targets can link
-# against.
+# library. If found, it generates an interface target that other targets can
+# link against.
 #
-# Args:
-#   NAME: The base name of the library to find (e.g., "advapi32" for
-#   "advapi32.lib").
+# Args: NAME: The base name of the library to find (e.g., "advapi32" for
+# "advapi32.lib").
 # ==============================================================================
 if(NOT COMMAND android_find_windows_library)
   function(android_find_windows_library NAME)
@@ -508,14 +508,64 @@ if(NOT COMMAND android_find_windows_library)
       find_library(${NAME}_LIB ${NAME})
       # Create an INTERFACE library that other targets can link against
       add_library(${NAME}::${NAME} INTERFACE IMPORTED GLOBAL)
-      set_target_properties(${NAME}::${NAME} PROPERTIES INTERFACE_LINK_LIBRARIES ${${NAME}_LIB})
+      set_target_properties(${NAME}::${NAME} PROPERTIES INTERFACE_LINK_LIBRARIES
+                                                        ${${NAME}_LIB})
     endif()
   endfunction()
 endif()
 
 if(WIN32)
-  set(WINDOWS_LIBS advapi32 dbghelp powrprof rpcrt4 user32 version winhttp)
+  set(WINDOWS_LIBS
+      advapi32
+      dbghelp
+      powrprof
+      rpcrt4
+      user32
+      version
+      winhttp)
   foreach(LIB ${WINDOWS_LIBS})
     android_find_windows_library(${LIB})
   endforeach()
 endif()
+
+# ===============================================================================
+# Creates a Crashpad test target with GoogleTest discovery.
+#
+# This function creates a test executable, registers it with CTest, and uses
+# gtest_discover_tests to automatically find all tests within the executable. It
+# automatically links against gtest and gtest_main.
+#
+# Args: TARGET: The name of the test target (Required). SRC: A list of common
+# source files. DEPS: A list of private dependencies (Optional). APPLE: A list
+# of Apple-specific source files (Optional). LINUX: A list of Linux-specific
+# source files (Optional). WIN32: A list of Windows-specific source files
+# (Optional). POSIX: A list of POSIX-specific source files (for Linux and Apple)
+# (Optional). ARGS: A list of arguments to pass to the test executable. TIMEOUT:
+# A timeout for the test in seconds. LABELS: A list of labels to apply to the
+# test (e.g., "unit", "integration").
+# ===============================================================================
+function(crashpad_test)
+  cmake_parse_arguments(
+    CRASHPAD_TEST "" "TARGET;TIMEOUT;WORKING_DIRECTORY;TEST_SUFFIX"
+    "SRC;APPLE;LINUX;WIN32;POSIX;DEPS;LABELS;ARGS;ENVIRONMENT" ${ARGN})
+
+  if(NOT CRASHPAD_TEST_TARGET)
+    message(FATAL_ERROR "TARGET must be specified for crashpad_test")
+  endif()
+
+  set(TEST_DEPS gtest crashpad_googletest_main ${CRASHPAD_TEST_DEPS})
+
+  crashpad_binary(
+    TARGET ${CRASHPAD_TEST_TARGET} SRC ${CRASHPAD_TEST_SRC}
+    APPLE ${CRASHPAD_TEST_APPLE} LINUX ${CRASHPAD_TEST_LINUX}
+    WIN32 ${CRASHPAD_TEST_WIN32} POSIX ${CRASHPAD_TEST_POSIX} DEPS ${TEST_DEPS})
+
+  add_test(NAME ${CRASHPAD_TEST_TARGET} COMMAND ${CRASHPAD_TEST_TARGET}
+                                                ${CRASHPAD_TEST_ARGS}
+           WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+  if(CRASHPAD_TEST_ENVIRONMENT)
+    set_tests_properties(${CRASHPAD_TEST_TARGET}
+                         PROPERTIES ENVIRONMENT "${CRASHPAD_TEST_ENVIRONMENT}")
+  endif()
+endfunction()

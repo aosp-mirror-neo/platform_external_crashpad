@@ -92,7 +92,7 @@ crashpad_library(
       test/test_thread_snapshot.cc
   DEPS crashpad_internal crashpad_snapshot)
 
-crashpad_binary(
+crashpad_test(
   TARGET crashpad_snapshot_test
   SRC cpu_context_test.cc memory_snapshot_test.cc
       minidump/process_snapshot_minidump_test.cc
@@ -128,7 +128,6 @@ crashpad_binary(
   DEPS crashpad_client_common
        crashpad_compat
        crashpad_context
-       crashpad_googletest_main
        crashpad_handler_lib
        crashpad_internal
        crashpad_net
@@ -136,7 +135,8 @@ crashpad_binary(
        crashpad_test
        crashpad_util
        gmock
-       gtest)
+       gtest
+  ENVIRONMENT "CRASHPAD_TEST_DATA_ROOT=${CRASHPAD_TEST_DATA_ROOT}")
 
 if(APPLE)
   target_link_libraries(crashpad_snapshot_test PRIVATE "-framework OpenCL")
@@ -148,11 +148,7 @@ elseif(LINUX)
   )
 endif()
 
-add_test(NAME crashpad_snapshot_test COMMAND crashpad_snapshot_test
-         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-set_property(
-  TEST crashpad_snapshot_test APPEND
-  PROPERTY ENVIRONMENT "CRASHPAD_TEST_DATA_ROOT=${CRASHPAD_TEST_DATA_ROOT}")
+
 
 if(APPLE)
   crashpad_test_module(
