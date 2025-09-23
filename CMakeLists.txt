@@ -53,6 +53,20 @@ if(NOT TARGET gtest)
                  "$<BUILD_INTERFACE:${/googletest_BINARY_DIR}>")
 endif()
 
+
+if(NOT TARGET absl::str_format)
+    CPMAddPackage(
+        NAME abseil-cpp
+        GIT_REPOSITORY "https://github.com/abseil/abseil-cpp.git"
+        GIT_TAG "20250512.1"  # This is the latest LTS release (May 2025)
+        OPTIONS
+            "BUILD_TESTING OFF"
+            "ABSL_BUILD_TESTING OFF"
+            "ABSL_ENABLE_INSTALL OFF"
+    )
+endif()
+
+
 enable_testing()
 set(CRASHPAD_ROOT ${CMAKE_CURRENT_LIST_DIR})
 if(WIN32)
