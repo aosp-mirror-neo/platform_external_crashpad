@@ -560,6 +560,15 @@ function(crashpad_test)
     APPLE ${CRASHPAD_TEST_APPLE} LINUX ${CRASHPAD_TEST_LINUX}
     WIN32 ${CRASHPAD_TEST_WIN32} POSIX ${CRASHPAD_TEST_POSIX} DEPS ${TEST_DEPS})
 
+
+  if(WINDOWS_MSVC_X86_64)
+    message(
+      WARNING
+        "Disabling running tests in android emulator build due to build bot config issues"
+    )
+    return()
+  endif()
+
   add_test(NAME ${CRASHPAD_TEST_TARGET} COMMAND ${CRASHPAD_TEST_TARGET}
                                                 ${CRASHPAD_TEST_ARGS}
            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
