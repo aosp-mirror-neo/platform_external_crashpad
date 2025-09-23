@@ -114,6 +114,7 @@ crashpad_library(
         mach/scoped_task_suspend.cc
         mach/symbolic_constants_mach.cc
         mach/task_for_pid.cc
+        misc/capture_context_mac.S
         misc/clock_mac.cc
         misc/paths_mac.cc
         posix/process_info_mac.cc
@@ -165,14 +166,13 @@ if(WIN32)
   crashpad_library(TARGET crashpad_util_win SRC misc/capture_context_win.asm
                                                 win/safe_terminate_process.asm)
   if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm|ARM|aarch64)")
-    target_sources(crashpad_util_win PRIVATE misc/capture_context_win_arm64.asm)
+    target_sources(crashpad_util_win PRIVATE
+                        misc/capture_context_win_arm64.asm)
   endif()
   target_link_libraries(
     crashpad_util PRIVATE user32::user32 winhttp::winhttp version::version
                           crashpad_util_win)
 elseif(APPLE)
-  android_add_library(TARGET crashpad_util_mac_asm LICENSE "Apache-2.0"
-                      SRC misc/capture_context_mac.S)
   target_compile_definitions(crashpad_util
                              PRIVATE CRASHPAD_FLOCK_ALWAYS_SUPPORTED)
   target_compile_options(
@@ -182,7 +182,7 @@ elseif(APPLE)
             "-Wno-deprecated-declarations" "-Wno-vla")
   target_link_libraries(
     crashpad_util PRIVATE "-framework CoreFoundation" "-framework Foundation"
-                          "-framework IOKit" crashpad_util_mac_asm)
+                          "-framework IOKit")
 elseif(LINUX)
   target_compile_options(crashpad_util PRIVATE "-Wno-attributes" "-Wno-vla")
   target_compile_definitions(crashpad_util PUBLIC CRASHPAD_LSS_SOURCE_EMBEDDED
