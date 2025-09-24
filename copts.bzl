@@ -95,6 +95,7 @@ CRASHPAD_COMMON_COPTS_SELECTOR = {
     "@platforms//os:macos": DEFAULT_COPTS + [
         "-std=c++20",
         "-Wno-non-virtual-dtor",
+        "-Wno-unguarded-availability-new",
         "-fno-exceptions",
     ],
     "//conditions:default": DEFAULT_COPTS + ["-std=c++20"],
