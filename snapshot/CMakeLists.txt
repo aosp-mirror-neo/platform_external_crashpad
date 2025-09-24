@@ -195,7 +195,7 @@ if(LINUX)
             "-Wl,--hash-style=both")
 endif()
 
-if(WIN32)
+if(WIN32 AND NOT WINDOWS_MSVC_X86_64)
   crashpad_binary(
     TARGET crashpad_snapshot_test_annotations
     SRC win/crashpad_snapshot_test_annotations.cc
