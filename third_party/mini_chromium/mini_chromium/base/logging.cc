@@ -77,7 +77,7 @@ std::string SystemErrorCodeToString(unsigned long error_code) {
   wchar_t msgbuf[256];
   DWORD flags = FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS |
                 FORMAT_MESSAGE_MAX_WIDTH_MASK;
-  DWORD len = FormatMessage(flags,
+  DWORD len = FormatMessageW(flags,
                             nullptr,
                             error_code,
                             0,
@@ -230,7 +230,7 @@ void LogMessage::Flush() {
           log.get(), os_log_type, "%{public}s", str_newline.c_str());
     }
 #elif BUILDFLAG(IS_WIN)
-    OutputDebugString(base::UTF8ToWide(str_newline).c_str());
+    OutputDebugStringW(base::UTF8ToWide(str_newline).c_str());
 #elif BUILDFLAG(IS_ANDROID)
     android_LogPriority priority =
         (severity_ < 0) ? ANDROID_LOG_VERBOSE : ANDROID_LOG_UNKNOWN;
