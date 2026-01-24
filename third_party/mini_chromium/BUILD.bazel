@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 load("@rules_cc//cc:defs.bzl", "cc_library")
+load("@rules_cc//cc:objc_library.bzl", "objc_library")
 load("@rules_license//rules:license.bzl", "license")
-load("@rules_cc//cc:defs.bzl", "cc_library")
 
 package(
     default_applicable_licenses = [":license"],
@@ -146,6 +146,7 @@ objc_library(
     copts = [
         "-Wno-arc-bridge-casts-disallowed-in-nonarc",
         "-Wno-deprecated-declarations",
+        "-std=c++20",
     ],
     includes = ["mini_chromium"],
     deps = [":hdrs"],
