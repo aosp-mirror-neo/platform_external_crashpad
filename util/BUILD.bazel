@@ -38,6 +38,7 @@ py_binary(
     ],
     imports = ["mach"],
     python_version = "PY3",
+    target_compatible_with = ["@platforms//os:macos"],
 )
 
 mig(
@@ -48,6 +49,7 @@ mig(
         "mach_exc.defs",
         "notify.defs",
     ],
+    target_compatible_with = ["@platforms//os:macos"],
 )
 
 cc_library(
@@ -56,6 +58,7 @@ cc_library(
         "mach/child_port_types.h",
     ],
     include_prefix = "util",
+    target_compatible_with = ["@platforms//os:macos"],
     visibility = ["//visibility:private"],
 )
 
@@ -69,6 +72,7 @@ cc_library(
         ":mac_mig_gen",
     ],
     include_prefix = "util/mach",
+    target_compatible_with = ["@platforms//os:macos"],
     visibility = ["//visibility:public"],
     deps = [":apple_mig_hdrs"],
 )
@@ -621,6 +625,7 @@ objc_library(
         "-fno-objc-arc-exceptions",
         "-fobjc-call-cxx-cdtors",
     ],
+    target_compatible_with = ["@platforms//os:macos"],
     deps = [
         ":util",
         "//:internal",
@@ -716,6 +721,7 @@ objc_library(
         "-fobjc-call-cxx-cdtors",
         "-Wno-shorten-64-to-32",
     ],
+    target_compatible_with = ["@platforms//os:macos"],
     deps = [
         ":net_hdrs",
         ":util",

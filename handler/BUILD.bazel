@@ -1,18 +1,8 @@
-# Copyright 2024 - The Android Open Source Project
-#
-# Licensed under the Apache License, Version 2.0 (the',  help='License');
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an',  help='AS IS' BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-load("//:copts.bzl", "CRASHPAD_COMMON_COPTS")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+load("//:copts.bzl", "CRASHPAD_COMMON_COPTS")
 
 licenses(["notice"])
 
@@ -197,7 +187,6 @@ cc_binary(
     ],
     copts = CRASHPAD_COMMON_COPTS,
     deps = [
-        ":handler_lib",
         "//:internal",
         "//compat",
         "//minidump:test_support",

@@ -29,6 +29,7 @@ cc_library(
         "settings.h",
     ],
     include_prefix = "client",
+    target_compatible_with = ["@platforms//os:macos"],
 )
 
 objc_library(
@@ -39,6 +40,7 @@ objc_library(
     copts = CRASHPAD_COMMON_COPTS + [
         "-fobjc-call-cxx-cdtors",
     ],
+    target_compatible_with = ["@platforms//os:macos"],
     deps = [
         ":common_apple_hdrs",
         "//third_party/mini_chromium:base",
@@ -110,6 +112,7 @@ cc_test(
     srcs = ["ring_buffer_annotation_load_test_main.cc"],
     deps = [
         ":client",
+        "//third_party/getopt",
         "//tools:tool_support",
     ],
 )
