@@ -314,7 +314,7 @@ function(crashpad_library)
   endif()
 
   if(CRASHPAD_LIB_DEPS)
-    target_link_libraries(${CRASHPAD_LIB_TARGET} PRIVATE ${CRASHPAD_LIB_DEPS})
+    target_link_libraries(${CRASHPAD_LIB_TARGET} PUBLIC ${CRASHPAD_LIB_DEPS})
   endif()
 
   target_compile_definitions(${CRASHPAD_LIB_TARGET} PRIVATE DEBUG)
