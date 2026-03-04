@@ -1,0 +1,15 @@
+load("@rules_license//rules:license.bzl", "license")
+
+package(
+    default_applicable_licenses = [":license"],
+    default_visibility = ["//visibility:public"],
+)
+
+license(
+    name = "license",
+    package_name = "xnu",
+    copyright_notice = "Copyright (c) 1999-2003 Apple Computer, Inc. All Rights Reserved.",
+    license_kinds = ["@rules_license//licenses/spdx:APSL-2.0"],
+    license_text = "APPLE_LICENSE",
+    visibility = ["//visibility:public"],
+)

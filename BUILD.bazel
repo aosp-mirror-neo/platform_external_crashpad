@@ -12,14 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_license//rules:license.bzl", "license")
+
 # Description:
 #   Crashpad is a crash-reporting system.
 load("copts.bzl", "CRASHPAD_COMMON_COPTS")
 
-package(default_visibility = [
-    ":clients",
-    "//extenal/crashpad:__subpackages__",
-])
+package(
+    default_applicable_licenses = [":license"],
+    default_visibility = [
+        ":clients",
+        "//:__subpackages__",
+    ],
+)
+
+license(
+    name = "license",
+    package_name = "crashpad",
+    copyright_notice = "Copyright 2014 The Crashpad Authors",
+    license_kinds = ["@rules_license//licenses/spdx:Apache-2.0"],
+    license_text = "LICENSE",
+    visibility = [":__subpackages__"],
+)
 
 # Crashpad itself is licensed under the Apache 2.0 license, but (when built for
 # non-Apple systems) has a dependency on a header for the Mach-O loader. This is

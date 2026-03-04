@@ -1,19 +1,9 @@
-# Copyright 2024 - The Android Open Source Project
-#
-# Licensed under the Apache License, Version 2.0 (the',  help='License');
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an',  help='AS IS' BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
 licenses(["notice"])
 
 package(
+    default_applicable_licenses = ["//:license"],
     default_visibility = [
         "//:__subpackages__",
     ],
@@ -51,6 +41,7 @@ COMPAT_NONMAC_SOURCES = [
 
 COMPAT_NONMAC_HEADERS = [
     "non_mac/mach/mach.h",
+    "non_mac/mach-o/loader.h",
 ]
 
 COMPAT_WINDOWS_SOURCES = [
@@ -82,44 +73,74 @@ COMPAT_NONWIN_HEADERS = [
 ]
 
 cc_library(
-    name = "compat",
-    srcs = select({
-        "@platforms//os:macos": COMPAT_MAC_SOURCES +
-                                COMPAT_NONWIN_SOURCES,
-        "@platforms//os:windows": COMPAT_WINDOWS_SOURCES + COMPAT_NONMAC_SOURCES,
-        "@platforms//os:linux": COMPAT_LINUX_SOURCES +
-                                COMPAT_NONMAC_SOURCES + COMPAT_NONWIN_SOURCES,
-    }),
+    name = "compat_interface",
     hdrs = select({
         "@platforms//os:macos": COMPAT_APPLE_HEADERS + COMPAT_MAC_HEADERS +
                                 COMPAT_NONWIN_HEADERS,
         "@platforms//os:linux": COMPAT_LINUX_HEADERS +
-                                COMPAT_NONMAC_HEADERS + COMPAT_NONWIN_HEADERS,
+                                COMPAT_NONWIN_HEADERS,
         "@platforms//os:windows": COMPAT_WINDOWS_HEADERS + COMPAT_NONWIN_HEADERS,
     }),
-    includes =
-        select(
-            {
-                "@platforms//os:macos": ["non_win"],
-                "@platforms//os:windows": [
-                    "non_mac",
-                    "win",
-                ],
-                "@platforms//os:linux": [
-                    "linux",
-                    "non_mac",
-                    "non_win",
-                ],
-            },
-        ),
-    linkopts =
-        select({
-            "@platforms//os:windows": [],
-            "//conditions:default": ["-ldl"],
-        }),
+    includes = select({
+        "@platforms//os:macos": ["non_win"],
+        "@platforms//os:windows": [
+            "win",
+        ],
+        "@platforms//os:linux": [
+            "linux",
+            "non_win",
+        ],
+    }),
     deps = [
         "//:internal",
         "//third_party/mini_chromium:base",
         "//util:no_cfi_icall",
     ],
+)
+
+cc_library(
+    name = "compat_nonmac",
+    srcs = COMPAT_NONMAC_SOURCES,
+    hdrs = COMPAT_NONMAC_HEADERS,
+    applicable_licenses = ["//third_party/xnu:license"],
+    includes = ["non_mac"],
+    target_compatible_with = select({
+        "@platforms//os:macos": ["@platforms//:incompatible"],
+        "//conditions:default": [],
+    }),
+    deps = [
+        ":compat_interface",
+        "//third_party/mini_chromium:base",
+    ],
+)
+
+cc_library(
+    name = "compat_mac",
+    srcs = COMPAT_MAC_SOURCES,
+    target_compatible_with = ["@platforms//os:macos"],
+    deps = [
+        ":compat_interface",
+        "//third_party/mini_chromium:base",
+    ],
+)
+
+cc_library(
+    name = "compat",
+    srcs = select({
+        "@platforms//os:macos": COMPAT_MAC_SOURCES +
+                                COMPAT_NONWIN_SOURCES,
+        "@platforms//os:windows": COMPAT_WINDOWS_SOURCES,
+        "@platforms//os:linux": COMPAT_LINUX_SOURCES +
+                                COMPAT_NONWIN_SOURCES,
+    }),
+    linkopts = select({
+        "@platforms//os:windows": [],
+        "//conditions:default": ["-ldl"],
+    }),
+    deps = [
+        ":compat_interface",
+    ] + select({
+        "@platforms//os:macos": [":compat_mac"],
+        "//conditions:default": [":compat_nonmac"],
+    }),
 )

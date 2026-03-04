@@ -22,7 +22,10 @@ package(
 
 license(
     name = "license",
+    package_name = "mini_chromium",
+    copyright_notice = "Copyright 2006-2008 The Chromium Authors",
     license_kinds = ["@rules_license//licenses/spdx:BSD-3-Clause"],
+    license_text = "mini_chromium/LICENSE",
     visibility = [":__subpackages__"],
 )
 

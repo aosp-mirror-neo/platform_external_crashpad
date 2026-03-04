@@ -1,3 +1,7 @@
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
 # Copyright 2024 - The Android Open Source Project
 #
 # Licensed under the Apache License, Version 2.0 (the',  help='License');
@@ -16,6 +20,7 @@ load("//:copts.bzl", "CRASHPAD_COMMON_COPTS", "cc_crashpad_test_module")
 licenses(["notice"])
 
 package(
+    default_applicable_licenses = ["//:license"],
     default_visibility = [
         "//:__subpackages__",
     ],
@@ -231,19 +236,10 @@ cc_library(
 )
 
 cc_library(
-    name = "snapshot",
-    srcs = SNAPSHOT_SRC_COMMON + select({
-        "@platforms//os:linux": SNAPSHOT_SRC_LINUX + SNAPSHOT_SRC_POSIX + SNAPSHOT_SRC_X86,
-        "@platforms//os:osx": SNAPSHOT_SRC_MAC + SNAPSHOT_SRC_POSIX,
-        "@platforms//os:windows": SNAPSHOT_SRC_WINDOWS + SNAPSHOT_SRC_X86,
-        "//conditions:default": [],
-    }),
+    name = "snapshot_base",
+    srcs = SNAPSHOT_SRC_COMMON,
+    hdrs = SNAPSHOT_HDRS_COMMON,
     copts = CRASHPAD_COMMON_COPTS,
-    linkopts = select({
-        "@platforms//os:windows": ["/defaultlib:powrprof.lib"],
-        "//conditions:default": [],
-    }),
-    visibility = ["//visibility:public"],
     deps = [
         ":context",
         ":headers",
@@ -251,6 +247,46 @@ cc_library(
         "//minidump:headers",
         "//util",
     ],
+)
+
+cc_library(
+    name = "snapshot_mac",
+    srcs = SNAPSHOT_SRC_MAC + SNAPSHOT_SRC_POSIX,
+    hdrs = SNAPSHOT_HDRS_MAC + SNAPSHOT_HDRS_POSIX,
+    applicable_licenses = ["//third_party/xnu:license"],
+    copts = CRASHPAD_COMMON_COPTS,
+    target_compatible_with = ["@platforms//os:osx"],
+    deps = [":snapshot_base"],
+)
+
+cc_library(
+    name = "snapshot_linux",
+    srcs = SNAPSHOT_SRC_LINUX + SNAPSHOT_SRC_POSIX + SNAPSHOT_SRC_X86,
+    hdrs = SNAPSHOT_HDRS_LINUX + SNAPSHOT_HDRS_POSIX + SNAPSHOT_HDRS_X86,
+    copts = CRASHPAD_COMMON_COPTS,
+    target_compatible_with = ["@platforms//os:linux"],
+    deps = [":snapshot_base"],
+)
+
+cc_library(
+    name = "snapshot_windows",
+    srcs = SNAPSHOT_SRC_WINDOWS + SNAPSHOT_SRC_X86,
+    hdrs = SNAPSHOT_HDRS_WINDOWS + SNAPSHOT_HDRS_X86,
+    copts = CRASHPAD_COMMON_COPTS,
+    linkopts = ["/defaultlib:powrprof.lib"],
+    target_compatible_with = ["@platforms//os:windows"],
+    deps = [":snapshot_base"],
+)
+
+cc_library(
+    name = "snapshot",
+    visibility = ["//visibility:public"],
+    deps = select({
+        "@platforms//os:osx": [":snapshot_mac"],
+        "@platforms//os:linux": [":snapshot_linux"],
+        "@platforms//os:windows": [":snapshot_windows"],
+        "//conditions:default": [":snapshot_base"],
+    }),
 )
 
 cc_library(
