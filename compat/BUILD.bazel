@@ -95,7 +95,10 @@ cc_library(
         "//:internal",
         "//third_party/mini_chromium:base",
         "//util:no_cfi_icall",
-    ],
+    ] + select({
+        "@platforms//os:windows": ["//third_party/getopt"],
+        "//conditions:default": [],
+    }),
 )
 
 cc_library(

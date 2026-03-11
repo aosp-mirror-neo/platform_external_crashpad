@@ -425,10 +425,16 @@ cc_library(
 cc_library(
     name = "util_common",
     srcs = CRASHPAD_UTIL_SOURCES,
-    hdrs = CRASHPAD_UTIL_HEADERS + [
-        "linux/address_types.h",
-        "win/address_types.h",
-    ],
+    hdrs = CRASHPAD_UTIL_HEADERS + select({
+        "@platforms//os:linux": ["linux/address_types.h"],
+        "@platforms//os:windows": [
+            "process/process_memory_win.h",
+            "win/address_types.h",
+            "win/process_info.h",
+            "win/scoped_handle.h",
+        ],
+        "//conditions:default": [],
+    }),
     copts = CRASHPAD_COMMON_COPTS + ["-DZLIB_CONST"],
     include_prefix = "util",
     deps = [
