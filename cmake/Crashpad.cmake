@@ -51,7 +51,7 @@ endif()
 function(mig_lib)
   set(options)
   set(oneValueArgs TARGET)
-  set(multiValueArgs SRC GENERATED DEFINES)
+  set(multiValueArgs SRC GENERATED)
   cmake_parse_arguments(mig "${options}" "${oneValueArgs}" "${multiValueArgs}"
                         ${ARGN})
 
@@ -69,7 +69,7 @@ function(mig_lib)
   set(mig_GEN "")
   if(APPLE) # Simplifies platform check
     if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm64")
-      set(mig_AARCH "arm64")
+      set(mig_AARCH "arm")
     elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64")
       set(mig_AARCH "x86_64")
     else()
@@ -93,17 +93,11 @@ function(mig_lib)
     add_custom_command(
       OUTPUT ${OUTPUT_FILES}
       COMMAND
-        ${Python_EXECUTABLE} mach/mig.py
-        --sdk "${CMAKE_OSX_SYSROOT}"
-        --arch "${mig_AARCH}"
-        "${ABS_FIL}"
+        ${Python_EXECUTABLE} mach/mig.py "${ABS_FIL}"
         "${mig_OUTPUT_DIR}/${FIL_WE}User.c"
-        "${mig_OUTPUT_DIR}/${FIL_WE}Server.c"
-        "${mig_OUTPUT_DIR}/${FIL_WE}.h"
-        "${mig_OUTPUT_DIR}/${FIL_WE}Server.h"
-        --
-        "-I../.." "-I../../compat/mac"
-        ${mig_DEFINES}
+        "${mig_OUTPUT_DIR}/${FIL_WE}Server.c" "${mig_OUTPUT_DIR}/${FIL_WE}.h"
+        "${mig_OUTPUT_DIR}/${FIL_WE}Server.h" --sdk ${CMAKE_OSX_SYSROOT}
+        --include ../.. --include ../../compat/mac --arch ${mig_AARCH}
       COMMENT "Generating mig files from ${FIL}"
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       DEPENDS ${ABS_FIL}

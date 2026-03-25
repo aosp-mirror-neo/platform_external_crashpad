@@ -80,7 +80,6 @@ def _mig_generate(ctx, defs_file, mig, cc, cc_env, cc_toolchain):
     if cc_toolchain.sysroot:
         args.extend(["-isysroot", cc_toolchain.sysroot])
     args.extend(["-I" + ctx.expand_location(include, ctx.attr.deps) for include in ctx.attr.include_dirs])
-    args.extend(["-D" + define for define in ctx.attr.defines])
     args.append(defs_path)
 
     ctx.actions.run(
@@ -204,9 +203,6 @@ mig = rule(
         "include_dirs": attr.string_list(
             doc = "A list of include directories for the MIG tool, subject to " +
                   "$(location ...) expansions.",
-        ),
-        "defines": attr.string_list(
-            doc = "A list of defines for the MIG tool.",
         ),
         "output_dir": attr.string(
             doc = "An optional output directory for generated files. If not " +

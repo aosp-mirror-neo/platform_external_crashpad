@@ -61,9 +61,10 @@
  */
 
 subsystem
-#if	KERNEL_SERVER || KOBJECT_SERVER
-	KernelServer
-#endif	/* KERNEL_SERVER || KOBJECT_SERVER */
+#if	KERNEL_SERVER
+	  KernelServer
+#endif	/* KERNEL_SERVER */
+
 #if	KERNEL_USER
 	  KernelUser
 #endif

@@ -22,11 +22,11 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <atomic>
 #include <memory>
 #include <string_view>
 #include <iostream>
 
+#include "base/atomicops.h"
 #include "base/check_op.h"
 #include "base/logging.h"
 #include "base/scoped_generic.h"
@@ -96,7 +96,7 @@ enum class StartupState : int {
 // when the handler is known to have started successfully, or failed to start
 // the value will be updated. The unhandled exception filter will not proceed
 // until one of those two cases happens.
-std::atomic<StartupState> g_handler_startup_state;
+base::subtle::AtomicWord g_handler_startup_state;
 
 // A CRITICAL_SECTION initialized with
 // RTL_CRITICAL_SECTION_FLAG_FORCE_DEBUG_INFO to force it to be allocated with a
@@ -107,18 +107,20 @@ CRITICAL_SECTION g_critical_section_with_debug_info;
 
 void SetHandlerStartupState(StartupState state) {
   DCHECK(state == StartupState::kSucceeded || state == StartupState::kFailed);
-  g_handler_startup_state.store(state, std::memory_order_release);
+  base::subtle::Release_Store(&g_handler_startup_state,
+                              static_cast<base::subtle::AtomicWord>(state));
 }
 
 StartupState BlockUntilHandlerStartedOrFailed() {
   // Wait until we know the handler has either succeeded or failed to start.
-  StartupState startup_state;
-  while ((startup_state = g_handler_startup_state.load(
-              std::memory_order_acquire)) == StartupState::kNotReady) {
+  base::subtle::AtomicWord startup_state;
+  while (
+      (startup_state = base::subtle::Acquire_Load(&g_handler_startup_state)) ==
+      static_cast<int>(StartupState::kNotReady)) {
     Sleep(1);
   }
 
-  return startup_state;
+  return static_cast<StartupState>(startup_state);
 }
 
 #if defined(ADDRESS_SANITIZER)
@@ -145,7 +147,7 @@ LONG WINAPI UnhandledExceptionHandler(EXCEPTION_POINTERS* exception_pointers) {
   // Otherwise, we know the handler startup has succeeded, and we can continue.
 
   // Tracks whether a thread has already entered UnhandledExceptionHandler.
-  static std::atomic<bool> have_crashed;
+  static base::subtle::AtomicWord have_crashed;
 
   // This is a per-process handler. While this handler is being invoked, other
   // threads are still executing as usual, so multiple threads could enter at
@@ -159,7 +161,7 @@ LONG WINAPI UnhandledExceptionHandler(EXCEPTION_POINTERS* exception_pointers) {
   // that we won't save the exception pointers from the second and further
   // crashes, but contention here is very unlikely, and we'll still have a stack
   // that's blocked at this location.
-  if (have_crashed.exchange(true)) {
+  if (base::subtle::Barrier_AtomicIncrement(&have_crashed, 1) > 1) {
     SleepEx(INFINITE, false);
   }
 

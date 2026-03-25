@@ -118,27 +118,6 @@ luci.bucket(
 )
 
 luci.bucket(
-    name = "ci.shadow",
-    shadows = "ci",
-    constraints = luci.bucket_constraints(
-        pools = ["luci.flex.ci"],
-        service_accounts = [
-            "crashpad-ci-builder@chops-service-accounts.iam.gserviceaccount.com",
-        ],
-    ),
-    bindings = [
-        # For led permissions.
-        luci.binding(
-            roles = "role/buildbucket.creator",
-            groups = [
-                "mdb/chrome-build-access-sphinx",
-            ],
-        ),
-    ],
-    dynamic = True,
-)
-
-luci.bucket(
     name = "try",
     acls = [
         acl.entry(
@@ -159,32 +138,11 @@ luci.bucket(
     ],
 )
 
-luci.bucket(
-    name = "try.shadow",
-    shadows = "try",
-    constraints = luci.bucket_constraints(
-        pools = ["luci.flex.try"],
-        service_accounts = [
-            "crashpad-try-builder@chops-service-accounts.iam.gserviceaccount.com",
-        ],
-    ),
-    bindings = [
-        # For led permissions.
-        luci.binding(
-            roles = "role/buildbucket.creator",
-            groups = [
-                "mdb/chrome-build-access-sphinx",
-            ],
-        ),
-    ],
-    dynamic = True,
-)
-
 def crashpad_recipe():
     return luci.recipe(
         name = "crashpad/build",
         cipd_package = "infra/recipe_bundles/chromium.googlesource.com/chromium/tools/build",
-        use_python3 = True,
+        use_python3=True,
     )
 
 def crashpad_caches(platform):
@@ -199,15 +157,17 @@ def crashpad_dimensions(platform, cpu, bucket):
     dimensions["pool"] = "luci.flex." + bucket
 
     if platform == "fuchsia":
-        dimensions["os"] = "Ubuntu-24.04"
+        dimensions["os"] = "Ubuntu-22.04"
     elif platform == "ios":
-        dimensions["os"] = "Mac-15"
+        dimensions["os"] = "Mac-13|Mac-14"
     elif platform == "linux":
-        dimensions["os"] = "Ubuntu-24.04"
+        dimensions["os"] = "Ubuntu-22.04"
     elif platform == "mac":
-        dimensions["os"] = "Mac-15"
-        if cpu == "arm64":
+        if cpu == "x64":
+            dimensions["os"] = "Mac-13|Mac-14"
+        elif cpu == "arm64":
             dimensions["cpu"] = cpu
+            dimensions["os"] = "Mac-15"
     elif platform == "win":
         dimensions["os"] = "Windows-10"
 
@@ -230,11 +190,6 @@ def crashpad_properties(platform, cpu, config, bucket):
     if platform == "win":
         properties["$depot_tools/windows_sdk"] = {
             "version": "uploaded:2024-01-11",
-        }
-
-    if platform == "mac" or platform == "ios":
-        properties["$depot_tools/osx_sdk"] = {
-            "sdk_version": "17c52",
         }
 
     if bucket == "ci":

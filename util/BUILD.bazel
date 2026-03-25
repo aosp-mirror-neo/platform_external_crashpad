@@ -45,10 +45,6 @@ py_binary(
 mig(
     name = "mac_mig_gen",
     srcs = ["mach/child_port.defs"],
-    defines = [
-        "MACH_EXC_SERVER_TASKIDTOKEN",
-        "MACH_EXC_SERVER_TASKIDTOKEN_STATE",
-    ],
     sdk_srcs = [
         "exc.defs",
         "mach_exc.defs",

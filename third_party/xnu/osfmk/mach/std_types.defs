@@ -62,8 +62,6 @@
 #ifndef	_MACH_STD_TYPES_DEFS_
 #define _MACH_STD_TYPES_DEFS_
 
-import <Availability.h>;
-
 /* from ISO/IEC 988:1999 spec */
 /* 7.18.1.1 Exact-width integer types */
 
@@ -96,7 +94,8 @@ type boolean_t = MACH_MSG_TYPE_BOOLEAN;
 type kern_return_t = int;
 
 type pointer_t = ^array[] of MACH_MSG_TYPE_BYTE
-	VM_TYPE_SAFE_UNSAFE(vm_offset_t, pointer_ut);
+	ctype: vm_offset_t;
+
 
 type mach_port_t = MACH_MSG_TYPE_COPY_SEND;
 type mach_port_array_t = array[] of mach_port_t;

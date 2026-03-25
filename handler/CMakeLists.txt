@@ -18,7 +18,7 @@ crashpad_library(
 
 crashpad_library(
   TARGET crashpad_handler_common
-  SRC crash_report_upload_rate_limit.cc crash_report_upload_thread.cc minidump_to_upload_parameters.cc
+  SRC crash_report_upload_thread.cc minidump_to_upload_parameters.cc
   APPLE mac/file_limit_annotation.cc
   DEPS crashpad_client_common crashpad_compat crashpad_internal
        crashpad_snapshot crashpad_util mini_chromium)
@@ -39,7 +39,7 @@ endif()
 
 crashpad_test(
   TARGET crashpad_handler_test
-  SRC crash_report_upload_rate_limit_test.cc minidump_to_upload_parameters_test.cc
+  SRC minidump_to_upload_parameters_test.cc
   WIN32 crashpad_handler_test.cc
   DEPS crashpad_handler_lib crashpad_internal
        crashpad_snapshot crashpad_snapshot_test_support gmock)
