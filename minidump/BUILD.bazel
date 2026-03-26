@@ -1,3 +1,6 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
 # Copyright 2024 - The Android Open Source Project
 #
 # Licensed under the Apache License, Version 2.0 (the',  help='License');
@@ -16,6 +19,7 @@ load("//:copts.bzl", "CRASHPAD_COMMON_COPTS")
 licenses(["notice"])
 
 package(
+    default_applicable_licenses = ["//:license"],
     default_visibility = ["//visibility:public"],
 )
 

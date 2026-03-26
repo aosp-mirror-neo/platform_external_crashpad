@@ -1,3 +1,5 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
 # Copyright 2024 - The Android Open Source Project
 #
 # Licensed under the Apache License, Version 2.0 (the',  help='License');
@@ -20,7 +22,10 @@ package(
 
 license(
     name = "license",
+    package_name = "lss",
+    copyright_notice = "Copyright 2005-2011 Google LLC",
     license_kinds = ["@rules_license//licenses/spdx:BSD-3-Clause"],
+    license_text = "lss/LICENSE",
     visibility = [":__subpackages__"],
 )
 

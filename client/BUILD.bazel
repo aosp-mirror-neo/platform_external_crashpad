@@ -1,3 +1,7 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+load("@rules_cc//cc:objc_library.bzl", "objc_library")
+
 # Copyright 2024 - The Android Open Source Project
 #
 # Licensed under the Apache License, Version 2.0 (the',  help='License');
@@ -16,6 +20,7 @@ load("//:copts.bzl", "CRASHPAD_COMMON_COPTS", "collect_plugins")
 licenses(["notice"])
 
 package(
+    default_applicable_licenses = ["//:license"],
     default_visibility = [
         "//:__subpackages__",
         "//:clients",
@@ -29,6 +34,7 @@ cc_library(
         "settings.h",
     ],
     include_prefix = "client",
+    target_compatible_with = ["@platforms//os:macos"],
 )
 
 objc_library(
@@ -36,9 +42,11 @@ objc_library(
     srcs = [
         "crash_report_database_mac.mm",
     ],
+    applicable_licenses = ["//third_party/xnu:license"],
     copts = CRASHPAD_COMMON_COPTS + [
         "-fobjc-call-cxx-cdtors",
     ],
+    target_compatible_with = ["@platforms//os:macos"],
     deps = [
         ":common_apple_hdrs",
         "//third_party/mini_chromium:base",
@@ -64,7 +72,7 @@ cc_library(
 )
 
 cc_library(
-    name = "common",
+    name = "common_base",
     srcs = [
         "annotation.cc",
         "annotation_list.cc",
@@ -72,11 +80,7 @@ cc_library(
         "crashpad_info.cc",
         "settings.cc",
     ] + select({
-        "@platforms//os:linux": [
-            "crash_report_database_generic.cc",
-            "crashpad_info_note.S",
-        ],
-        "@platforms//os:windows": ["crash_report_database_win.cc"],
+        "@platforms//os:linux": ["crashpad_info_note.S"],
         "//conditions:default": [],
     }),
     hdrs = [
@@ -88,19 +92,50 @@ cc_library(
         "simple_address_range_bag.h",
         "simple_string_dictionary.h",
     ],
-    copts = CRASHPAD_COMMON_COPTS + select({
-        "@platforms//os:linux": [
-            "-Wno-class-memaccess",
-        ],
-        "//conditions:default": [],
-    }),
+    copts = CRASHPAD_COMMON_COPTS,
     deps = [
         ":common_hdrs",
         "//compat",
         "//third_party/mini_chromium:base",
         "//util",
-    ] + select({
-        "@platforms//os:osx": [":common_apple"],
+    ],
+)
+
+cc_library(
+    name = "common_linux",
+    srcs = [
+        "crash_report_database_generic.cc",
+    ],
+    copts = CRASHPAD_COMMON_COPTS + ["-Wno-class-memaccess"],
+    linkstatic = True,
+    target_compatible_with = ["@platforms//os:linux"],
+    deps = [":common_base"],
+)
+
+cc_library(
+    name = "common_windows",
+    srcs = ["crash_report_database_win.cc"],
+    copts = CRASHPAD_COMMON_COPTS,
+    target_compatible_with = ["@platforms//os:windows"],
+    deps = [":common_base"],
+)
+
+cc_library(
+    name = "common_mac_lib",
+    applicable_licenses = ["//third_party/xnu:license"],
+    target_compatible_with = ["@platforms//os:osx"],
+    deps = [
+        ":common_apple",
+        ":common_base",
+    ],
+)
+
+cc_library(
+    name = "common",
+    deps = [":common_base"] + select({
+        "@platforms//os:linux": [":common_linux"],
+        "@platforms//os:windows": [":common_windows"],
+        "@platforms//os:osx": [":common_mac_lib"],
         "//conditions:default": [],
     }),
 )
@@ -110,33 +145,16 @@ cc_test(
     srcs = ["ring_buffer_annotation_load_test_main.cc"],
     deps = [
         ":client",
+        "//third_party/getopt",
         "//tools:tool_support",
     ],
 )
 
 cc_library(
-    name = "client",
+    name = "client_base",
     srcs = [
         "prune_crash_reports.cc",
-    ] + select({
-        "@platforms//os:osx": [
-            "crashpad_client_mac.cc",
-            "simulate_crash_mac.cc",
-            "simulate_crash_mac.h",
-        ],
-        "@platforms//os:linux": [
-            "client_argv_handling.cc",
-            "client_argv_handling.h",
-            "crashpad_client_linux.cc",
-            "simulate_crash_linux.h",
-        ],
-        "@platforms//os:windows": [
-            "crashpad_client_win.cc",
-            "simulate_crash_win.h",
-        ],
-        "//conditions:default": [
-        ],
-    }),
+    ],
     hdrs = [
         "annotation.h",
         "annotation_list.h",
@@ -148,26 +166,71 @@ cc_library(
         "simple_address_range_bag.h",
         "simple_string_dictionary.h",
         "simulate_crash.h",
-    ] + select({
-        "//conditions:default": [],
-    }),
+    ],
     copts = CRASHPAD_COMMON_COPTS,
-    linkopts = select({
-        "@platforms//os:windows": ["-defaultlib:rpcrt4.lib"],
-        "//conditions:default": ["-pthread"],
-    }),
-    visibility = ["//visibility:public"],
     deps = [
         ":common",
         "//:internal",
         "//compat",
         "//third_party/mini_chromium:base",
         "//util",
-    ] + select({
-        "@platforms//os:linux": [
-            "//third_party/lss",
-        ],
-        "//conditions:default": [],
+    ],
+)
+
+cc_library(
+    name = "client_mac",
+    srcs = [
+        "crashpad_client_mac.cc",
+        "simulate_crash_mac.cc",
+        "simulate_crash_mac.h",
+    ],
+    applicable_licenses = ["//third_party/xnu:license"],
+    copts = CRASHPAD_COMMON_COPTS,
+    target_compatible_with = ["@platforms//os:osx"],
+    deps = [":client_base"],
+)
+
+cc_library(
+    name = "client_linux",
+    srcs = [
+        "client_argv_handling.cc",
+        "client_argv_handling.h",
+        "crashpad_client_linux.cc",
+        "simulate_crash_linux.h",
+    ],
+    copts = CRASHPAD_COMMON_COPTS,
+    linkstatic = True,
+    target_compatible_with = ["@platforms//os:linux"],
+    deps = [
+        ":client_base",
+        "//third_party/lss",
+    ],
+)
+
+cc_library(
+    name = "client_windows",
+    srcs = [
+        "crashpad_client_win.cc",
+        "simulate_crash_win.h",
+    ],
+    copts = CRASHPAD_COMMON_COPTS,
+    linkopts = ["-defaultlib:rpcrt4.lib"],
+    target_compatible_with = ["@platforms//os:windows"],
+    deps = [":client_base"],
+)
+
+cc_library(
+    name = "client",
+    linkopts = select({
+        "@platforms//os:windows": [],  # Already in client_windows
+        "//conditions:default": ["-pthread"],
+    }),
+    visibility = ["//visibility:public"],
+    deps = select({
+        "@platforms//os:osx": [":client_mac"],
+        "@platforms//os:linux": [":client_linux"],
+        "@platforms//os:windows": [":client_windows"],
+        "//conditions:default": [":client_base"],
     }),
 )
 

@@ -1,22 +1,27 @@
-# Copyright 2024 - The Android Open Source Project
+# Copyright 2018 The Crashpad Authors. All rights reserved.
 #
-# Licensed under the Apache License, Version 2.0 (the',  help='License');
+# Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an',  help='AS IS' BASIS,
+# distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-load("//:copts.bzl", "CRASHPAD_COMMON_COPTS")
+
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+load("//:copts.bzl", "CRASHPAD_COMMON_COPTS")
 
 licenses(["notice"])
 
 package(
+    default_applicable_licenses = ["//:license"],
     default_visibility = [
         "//:__subpackages__",
         "//:clients",
@@ -24,14 +29,11 @@ package(
 )
 
 cc_library(
-    name = "common",
+    name = "common_interface",
     srcs = [
         "crash_report_upload_thread.cc",
         "minidump_to_upload_parameters.cc",
-    ] + select({
-        "@platforms//os:macos": ["mac/file_limit_annotation.cc"],
-        "//conditions:default": [],
-    }),
+    ],
     hdrs = [
         "crash_report_upload_thread.h",
         "mac/file_limit_annotation.h",
@@ -40,64 +42,56 @@ cc_library(
     copts = CRASHPAD_COMMON_COPTS,
     include_prefix = "handler",
     deps = [
-        # ":common_hdrs",
         "//client:common",
         "//compat",
         "//snapshot",
+        "//third_party/mini_chromium:base",
         "//util",
         "//util:net",
+    ],
+)
+
+cc_library(
+    name = "common_mac",
+    srcs = ["mac/file_limit_annotation.cc"],
+    applicable_licenses = ["//third_party/xnu:license"],
+    copts = CRASHPAD_COMMON_COPTS,
+    target_compatible_with = ["@platforms//os:macos"],
+    deps = [
+        ":common_interface",
         "//third_party/mini_chromium:base",
     ],
 )
 
 cc_library(
-    name = "handler",
+    name = "common",
+    deps = [":common_interface"] + select({
+        "@platforms//os:macos": [":common_mac"],
+        "//conditions:default": [],
+    }),
+)
+
+cc_library(
+    name = "handler_interface",
     srcs = [
         "handler_main.cc",
         "prune_crash_reports_thread.cc",
         "user_stream_data_source.cc",
-    ] + select({
-        "@platforms//os:osx": [
-            "mac/crash_report_exception_handler.cc",
-            "mac/exception_handler_server.cc",
-        ],
-        "@platforms//os:linux": [
-            "linux/capture_snapshot.cc",
-            "linux/crash_report_exception_handler.cc",
-            "linux/cros_crash_report_exception_handler.cc",
-            "linux/exception_handler_server.cc",
-        ],
-        "@platforms//os:windows": [
-            "win/crash_report_exception_handler.cc",
-        ],
-        "//conditions:default": [],
-    }),
+    ],
     hdrs = [
         "handler_main.h",
+        "linux/capture_snapshot.h",
+        "linux/crash_report_exception_handler.h",
+        "linux/cros_crash_report_exception_handler.h",
+        "linux/exception_handler_server.h",
+        "mac/crash_report_exception_handler.h",
+        "mac/exception_handler_server.h",
         "prune_crash_reports_thread.h",
         "user_stream_data_source.h",
-    ] + select({
-        "@platforms//os:osx": [
-            "mac/crash_report_exception_handler.h",
-            "mac/exception_handler_server.h",
-        ],
-        "@platforms//os:linux": [
-            "linux/capture_snapshot.h",
-            "linux/crash_report_exception_handler.h",
-            "linux/cros_crash_report_exception_handler.h",
-            "linux/exception_handler_server.h",
-        ],
-        "@platforms//os:windows": [
-            "win/crash_report_exception_handler.h",
-        ],
-        "//conditions:default": [],
-    }),
-    copts = CRASHPAD_COMMON_COPTS + select({
-        "@platforms//os:windows": ["/wd4201"],
-        "//conditions:default": [],
-    }),
+        "win/crash_report_exception_handler.h",
+    ],
+    copts = CRASHPAD_COMMON_COPTS,
     include_prefix = "handler",
-    visibility = ["//visibility:public"],
     deps = [
         ":common",
         "//client",
@@ -107,9 +101,65 @@ cc_library(
         "//third_party/mini_chromium:base",
         "//tools:tool_support",
         "//util",
-    ] + select({
-        "@platforms//os:windows": ["//third_party/getopt"],
-        "//conditions:default": [],
+    ],
+)
+
+cc_library(
+    name = "handler_mac",
+    srcs = [
+        "mac/crash_report_exception_handler.cc",
+        "mac/exception_handler_server.cc",
+    ],
+    applicable_licenses = ["//third_party/xnu:license"],
+    copts = CRASHPAD_COMMON_COPTS,
+    include_prefix = "handler",
+    target_compatible_with = ["@platforms//os:osx"],
+    deps = [
+        ":handler_interface",
+        "//third_party/mini_chromium:base",
+    ],
+)
+
+cc_library(
+    name = "handler_linux",
+    srcs = [
+        "linux/capture_snapshot.cc",
+        "linux/crash_report_exception_handler.cc",
+        "linux/cros_crash_report_exception_handler.cc",
+        "linux/exception_handler_server.cc",
+    ],
+    copts = CRASHPAD_COMMON_COPTS,
+    include_prefix = "handler",
+    target_compatible_with = ["@platforms//os:linux"],
+    deps = [
+        ":handler_interface",
+        "//third_party/mini_chromium:base",
+    ],
+)
+
+cc_library(
+    name = "handler_win",
+    srcs = [
+        "win/crash_report_exception_handler.cc",
+    ],
+    copts = CRASHPAD_COMMON_COPTS + ["/wd4201"],
+    include_prefix = "handler",
+    target_compatible_with = ["@platforms//os:windows"],
+    deps = [
+        ":handler_interface",
+        "//third_party/getopt",
+        "//third_party/mini_chromium:base",
+    ],
+)
+
+cc_library(
+    name = "handler",
+    visibility = ["//visibility:public"],
+    deps = select({
+        "@platforms//os:osx": [":handler_mac"],
+        "@platforms//os:linux": [":handler_linux"],
+        "@platforms//os:windows": [":handler_win"],
+        "//conditions:default": [":handler_interface"],
     }),
 )
 
@@ -197,7 +247,6 @@ cc_binary(
     ],
     copts = CRASHPAD_COMMON_COPTS,
     deps = [
-        ":handler_lib",
         "//:internal",
         "//compat",
         "//minidump:test_support",
