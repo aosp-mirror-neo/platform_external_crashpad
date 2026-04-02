@@ -25,6 +25,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -69,6 +70,8 @@
 #elif BUILDFLAG(IS_APPLE)
 #include <libgen.h>
 #include <signal.h>
+#include <sys/event.h>
+#include <sys/time.h>
 
 #include "base/apple/scoped_mach_port.h"
 #include "handler/mac/crash_report_exception_handler.h"
@@ -151,6 +154,7 @@ void Usage(const base::FilePath& me) {
 "                              set a module annotation in the handler\n"
 "      --monitor-self-argument=ARGUMENT\n"
 "                              provide additional arguments to the second handler\n"
+"      --monitor-pid=PID       shut down if PID terminates (macOS only)\n"
 "      --no-identify-client-via-url\n"
 "                              when uploading crash report, don't add\n"
 "                              client-identifying arguments to URL\n"
@@ -228,6 +232,7 @@ struct Options {
 #if BUILDFLAG(IS_APPLE)
   std::string mach_service;
   int handshake_fd;
+  pid_t monitor_pid;
   bool reset_own_crash_exception_port_to_system_default;
 #elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_ANDROID)
   VMAddress exception_information_address;
@@ -527,6 +532,35 @@ void MonitorSelf(const Options& options) {
   ReinstallCrashHandler();
 }
 
+#if BUILDFLAG(IS_APPLE)
+void MonitorParent(pid_t pid) {
+  int kq = kqueue();
+  if (kq == -1) {
+    PLOG(ERROR) << "kqueue";
+    return;
+  }
+
+  struct kevent ev;
+  EV_SET(&ev, pid, EVFILT_PROC, EV_ADD, NOTE_EXIT, 0, NULL);
+  if (kevent(kq, &ev, 1, NULL, 0, NULL) == -1) {
+    PLOG(ERROR) << "kevent";
+    close(kq);
+    return;
+  }
+
+  // Wait for the exit event.
+  if (kevent(kq, NULL, 0, &ev, 1, NULL) == -1) {
+    PLOG(ERROR) << "kevent";
+  }
+
+  close(kq);
+
+  if (g_exception_handler_server) {
+    g_exception_handler_server->Stop();
+  }
+}
+#endif  // BUILDFLAG(IS_APPLE)
+
 class ScopedStoppable {
  public:
   ScopedStoppable() = default;
@@ -602,6 +636,7 @@ int HandlerMain(int argc,
     kOptionMonitorSelf,
     kOptionMonitorSelfAnnotation,
     kOptionMonitorSelfArgument,
+    kOptionMonitorPID,
     kOptionNoIdentifyClientViaUrl,
     kOptionNoPeriodicTasks,
     kOptionNoRateLimit,
@@ -667,6 +702,7 @@ int HandlerMain(int argc,
      required_argument,
      nullptr,
      kOptionMonitorSelfArgument},
+    {"monitor-pid", required_argument, nullptr, kOptionMonitorPID},
     {"no-identify-client-via-url",
      no_argument,
      nullptr,
@@ -727,6 +763,7 @@ int HandlerMain(int argc,
   Options options = {};
 #if BUILDFLAG(IS_APPLE)
   options.handshake_fd = -1;
+  options.monitor_pid = 0;
 #endif
   options.identify_client_via_url = true;
 #if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_ANDROID)
@@ -772,6 +809,16 @@ int HandlerMain(int argc,
       }
       case kOptionMachService: {
         options.mach_service = optarg;
+        break;
+      }
+      case kOptionMonitorPID: {
+        int monitor_pid_int;
+        if (!base::StringToInt(optarg, &monitor_pid_int) ||
+            monitor_pid_int <= 0) {
+          ToolSupport::UsageHint(me, "--monitor-pid requires a process ID");
+          return ExitFailure();
+        }
+        options.monitor_pid = static_cast<pid_t>(monitor_pid_int);
         break;
       }
 #endif  // BUILDFLAG(IS_APPLE)
@@ -1132,6 +1179,11 @@ int HandlerMain(int argc,
   base::AutoReset<ExceptionHandlerServer*> reset_g_exception_handler_server(
       &g_exception_handler_server, &exception_handler_server);
 
+  std::thread monitor_thread;
+  if (options.monitor_pid > 0) {
+    monitor_thread = std::thread(MonitorParent, options.monitor_pid);
+  }
+
   struct sigaction old_sigterm_action;
   ScopedResetSIGTERM reset_sigterm;
   if (!options.mach_service.empty()) {
@@ -1191,6 +1243,14 @@ int HandlerMain(int argc,
 #endif  // BUILDFLAG(IS_WIN)
 
   exception_handler_server.Run(exception_handler.get());
+
+#if BUILDFLAG(IS_APPLE)
+  if (monitor_thread.joinable()) {
+    // If the monitor thread is still running, it means the server exited
+    // for another reason (e.g. no-senders). We should detach it.
+    monitor_thread.detach();
+  }
+#endif
 
   return EXIT_SUCCESS;
 }
