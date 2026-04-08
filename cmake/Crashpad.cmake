@@ -27,6 +27,16 @@
 # Wrapper for find_library on Windows.
 #
 
+if(APPLE AND NOT CMAKE_OSX_SYSROOT)
+  execute_process(
+    COMMAND xcrun --show-sdk-path
+    OUTPUT_VARIABLE CMAKE_OSX_SYSROOT
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+  set(CMAKE_OSX_SYSROOT
+      "${CMAKE_OSX_SYSROOT}"
+      CACHE PATH "Path to MacOS SDK" FORCE)
+endif()
+
 # Generates Mach Interface Generator (MIG) files and compiles them into a
 # library.
 #

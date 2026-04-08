@@ -1,3 +1,6 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_license//rules:license.bzl", "license")
+
 # Copyright 2024 - The Android Open Source Project
 #
 # Licensed under the Apache License, Version 2.0 (the',  help='License');
@@ -13,7 +16,10 @@
 # limitations under the License.
 load("//:copts.bzl", "CRASHPAD_COMMON_COPTS")
 
-package(default_visibility = ["//:__subpackages__"])
+package(
+    default_applicable_licenses = [":license"],
+    default_visibility = ["//:__subpackages__"],
+)
 
 cc_library(
     name = "cpp-httplib",
@@ -25,4 +31,13 @@ cc_library(
         "//:zlib",
         "@boringssl//:ssl",
     ],
+)
+
+license(
+    name = "license",
+    package_name = "cpp-httplib",
+    copyright_notice = "Copyright (c) 2024 Yuji Hirose. All rights reserved.",
+    license_kinds = ["@rules_license//licenses/spdx:MIT"],
+    license_text = "cpp-httplib/LICENSE",
+    visibility = [":__subpackages__"],
 )

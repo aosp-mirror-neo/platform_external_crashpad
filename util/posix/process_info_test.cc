@@ -182,7 +182,8 @@ TEST(ProcessInfo, SelfTask) {
 }
 #endif
 
-TEST(ProcessInfo, Pid1) {
+// Disabled due to b/490221604
+TEST(ProcessInfo, DISABLED_Pid1) {
   // PID 1 is expected to be init or the system’s equivalent. This tests reading
   // information about another process.
   ProcessInfo process_info;

@@ -12,11 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("//:copts.bzl", "CRASHPAD_COMMON_COPTS")
 
 licenses(["notice"])
 
 package(
+    default_applicable_licenses = ["//:license"],
     default_visibility = ["//visibility:public"],
 )
 
@@ -40,6 +43,7 @@ cc_binary(
         ":tool_support",
         "//client",
         "//snapshot",
+        "//third_party/getopt",
         "//util",
     ],
 )
@@ -55,6 +59,7 @@ cc_binary(
         "//:internal",
         "//client",
         "//compat",
+        "//third_party/getopt",
         "//third_party/mini_chromium:base",
         "//util",
     ],
@@ -70,6 +75,7 @@ cc_binary(
         ":tool_support",
         "//:internal",
         "//compat",
+        "//third_party/getopt",
         "//third_party/mini_chromium:base",
         "//util",
     ] + select({
@@ -86,6 +92,7 @@ cc_binary(
     deps = [
         ":tool_support",
         "//:internal",
+        "//third_party/getopt",
         "//third_party/mini_chromium:base",
         "//util",
     ] + select({

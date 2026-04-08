@@ -1,3 +1,6 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_license//rules:license.bzl", "license")
+
 # Copyright 2024 - The Android Open Source Project
 #
 # Licensed under the Apache License, Version 2.0 (the',  help='License');
@@ -13,7 +16,19 @@
 # limitations under the License.
 load("//:copts.bzl", "CRASHPAD_COMMON_COPTS")
 
-package(default_visibility = ["//:__subpackages__"])
+package(
+    default_applicable_licenses = [":license"],
+    default_visibility = ["//:__subpackages__"],
+)
+
+license(
+    name = "license",
+    package_name = "getopt",
+    copyright_notice = "Public domain",
+    license_kinds = ["@rules_license//licenses/spdx:CC-PDDC"],
+    license_text = "LICENSE",
+    visibility = [":__subpackages__"],
+)
 
 cc_library(
     name = "getopt",

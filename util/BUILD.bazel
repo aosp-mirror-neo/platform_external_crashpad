@@ -23,6 +23,7 @@ load("mig.bzl", "mig")
 licenses(["notice"])
 
 package(
+    default_applicable_licenses = ["//:license"],
     default_visibility = [
         "//:__subpackages__",
         "//:clients",
@@ -38,6 +39,7 @@ py_binary(
     ],
     imports = ["mach"],
     python_version = "PY3",
+    target_compatible_with = ["@platforms//os:macos"],
 )
 
 mig(
@@ -48,6 +50,7 @@ mig(
         "mach_exc.defs",
         "notify.defs",
     ],
+    target_compatible_with = ["@platforms//os:macos"],
 )
 
 cc_library(
@@ -56,6 +59,7 @@ cc_library(
         "mach/child_port_types.h",
     ],
     include_prefix = "util",
+    target_compatible_with = ["@platforms//os:macos"],
     visibility = ["//visibility:private"],
 )
 
@@ -68,7 +72,9 @@ cc_library(
         "mach/child_port_types.h",
         ":mac_mig_gen",
     ],
+    applicable_licenses = ["//third_party/xnu:license"],
     include_prefix = "util/mach",
+    target_compatible_with = ["@platforms//os:macos"],
     visibility = ["//visibility:public"],
     deps = [":apple_mig_hdrs"],
 )
@@ -417,64 +423,95 @@ cc_library(
 )
 
 cc_library(
-    name = "util",
-    srcs = CRASHPAD_UTIL_SOURCES +
-           select({
-               "@platforms//os:macos": CRASHPAD_UTIL_POSIX_SOURCES + CRASHPAD_UTIL_MACOS_SOURCES,
-               "@platforms//os:windows": CRASHPAD_UTIL_WINDOWS_SOURCES + CRASPHAD_UTIL_WINDOWS_ASM,
-               "@platforms//os:linux": CRASHPAD_UTIL_LINUX_SOURCES +
-                                       CRASHPAD_UTIL_POSIX_SOURCES,
-           }),
-    hdrs = CRASHPAD_UTIL_HEADERS +
-           select({
-               "@platforms//os:macos": CRASHPAD_UTIL_MACOS_HEADERS + CRASHPAD_UTIL_POSIX_HEADERS,
-               "@platforms//os:windows": CRASHPAD_UTIL_WINDOWS_HEADERS,
-               "@platforms//os:linux": CRASHPAD_UTIL_LINUX_HEADERS +
-                                       CRASHPAD_UTIL_POSIX_HEADERS,
-           }),
-    copts = CRASHPAD_COMMON_COPTS + [
-        "-DZLIB_CONST",
-    ] + select({
-        "@platforms//os:linux": [
-            "-Wno-dangling-else",
-            "-Wno-vla",
-        ],
-        "@platforms//os:macos": [
-            "-Wno-deprecated-declarations",
-            "-Wno-vla",
-        ],
-        "@platforms//os:windows": [],
-        "//conditions:default": [],
-    }),
-    include_prefix = "util",
-    linkopts = select({
-        "@platforms//os:linux": [],
-        "@platforms//os:macos": [
-            "-framework CoreFoundation",
-            "-framework Foundation",
-            "-framework IOKit",
-            "-lbsm",
-        ],
+    name = "util_common",
+    srcs = CRASHPAD_UTIL_SOURCES,
+    hdrs = CRASHPAD_UTIL_HEADERS + select({
+        "@platforms//os:linux": ["linux/address_types.h"],
         "@platforms//os:windows": [
-            "-defaultlib:user32.lib",
-            "-defaultlib:winhttp.lib",
-            "-defaultlib:version.lib",
+            "process/process_memory_win.h",
+            "win/address_types.h",
+            "win/process_info.h",
+            "win/scoped_handle.h",
         ],
         "//conditions:default": [],
     }),
+    copts = CRASHPAD_COMMON_COPTS + ["-DZLIB_CONST"],
+    include_prefix = "util",
     deps = [
         ":no_cfi_icall",
         "//:internal",
-        "//compat",
         "//:zlib",
-        # "//third_party/lss",
-        # "//third_party/zlib",
+        "//compat",
         "//third_party/mini_chromium:base",
-    ] + select({
-        "@platforms//os:linux": ["//third_party/lss"],
-        "@platforms//os:macos": [":apple_mig"],
-        "@platforms//os:windows": [],
-        "//conditions:default": [],
+    ],
+)
+
+cc_library(
+    name = "util_mac",
+    srcs = CRASHPAD_UTIL_POSIX_SOURCES + CRASHPAD_UTIL_MACOS_SOURCES,
+    hdrs = CRASHPAD_UTIL_MACOS_HEADERS + CRASHPAD_UTIL_POSIX_HEADERS,
+    applicable_licenses = ["//third_party/xnu:license"],
+    copts = CRASHPAD_COMMON_COPTS + [
+        "-DZLIB_CONST",
+        "-Wno-deprecated-declarations",
+        "-Wno-vla",
+    ],
+    include_prefix = "util",
+    linkopts = [
+        "-framework CoreFoundation",
+        "-framework Foundation",
+        "-framework IOKit",
+        "-lbsm",
+    ],
+    target_compatible_with = ["@platforms//os:macos"],
+    deps = [
+        ":apple_mig",
+        ":util_common",
+    ],
+)
+
+cc_library(
+    name = "util_linux",
+    srcs = CRASHPAD_UTIL_LINUX_SOURCES + CRASHPAD_UTIL_POSIX_SOURCES,
+    hdrs = CRASHPAD_UTIL_LINUX_HEADERS + CRASHPAD_UTIL_POSIX_HEADERS,
+    copts = CRASHPAD_COMMON_COPTS + [
+        "-DZLIB_CONST",
+        "-Wno-dangling-else",
+        "-Wno-vla",
+    ],
+    include_prefix = "util",
+    target_compatible_with = ["@platforms//os:linux"],
+    deps = [
+        ":util_common",
+        "//third_party/lss",
+    ],
+)
+
+cc_library(
+    name = "util_windows",
+    srcs = CRASHPAD_UTIL_WINDOWS_SOURCES + CRASPHAD_UTIL_WINDOWS_ASM,
+    hdrs = CRASHPAD_UTIL_WINDOWS_HEADERS,
+    copts = CRASHPAD_COMMON_COPTS + ["-DZLIB_CONST"],
+    include_prefix = "util",
+    linkopts = [
+        "-defaultlib:user32.lib",
+        "-defaultlib:winhttp.lib",
+        "-defaultlib:version.lib",
+    ],
+    target_compatible_with = ["@platforms//os:windows"],
+    deps = [
+        ":util_common",
+    ],
+)
+
+cc_library(
+    name = "util",
+    visibility = ["//visibility:public"],
+    deps = select({
+        "@platforms//os:macos": [":util_mac"],
+        "@platforms//os:windows": [":util_windows"],
+        "@platforms//os:linux": [":util_linux"],
+        "//conditions:default": [":util_common"],
     }),
 )
 
@@ -621,6 +658,7 @@ objc_library(
         "-fno-objc-arc-exceptions",
         "-fobjc-call-cxx-cdtors",
     ],
+    target_compatible_with = ["@platforms//os:macos"],
     deps = [
         ":util",
         "//:internal",
@@ -710,11 +748,13 @@ objc_library(
     name = "net_apple",
     srcs = ["net/http_transport_mac.mm"],
     copts = [
+        "-std=c++20",
         "-fobjc-arc",
         "-fno-objc-arc-exceptions",
         "-fobjc-call-cxx-cdtors",
         "-Wno-shorten-64-to-32",
     ],
+    target_compatible_with = ["@platforms//os:macos"],
     deps = [
         ":net_hdrs",
         ":util",

@@ -544,6 +544,9 @@ class StartHandlerForSelfInChildTest : public MultiprocessExec {
 };
 
 TEST_P(StartHandlerForSelfTest, StartHandlerInChild) {
+  // b/482066834, flaky test with a 12% failure rate on linux
+  GTEST_SKIP();
+
 #if defined(ADDRESS_SANITIZER) || defined(MEMORY_SANITIZER) || \
     defined(UNDEFINED_SANITIZER)
   if (Options().crash_type == CrashType::kInfiniteRecursion) {
