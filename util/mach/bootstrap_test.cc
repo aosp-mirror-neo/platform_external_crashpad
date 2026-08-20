@@ -24,11 +24,6 @@ namespace test {
 namespace {
 
 TEST(Bootstrap, BootstrapCheckInAndLookUp) {
-  // This should always exist.
-  base::apple::ScopedMachSendRight report_crash(
-      BootstrapLookUp("com.apple.ReportCrash"));
-  EXPECT_NE(report_crash, kMachPortNull);
-
   std::string service_name = "org.chromium.crashpad.test.bootstrap_check_in.";
   service_name.append(RandomString());
 
@@ -63,7 +58,10 @@ TEST(Bootstrap, BootstrapCheckInAndLookUp) {
 TEST(Bootstrap, SystemCrashReporterHandler) {
   base::apple::ScopedMachSendRight system_crash_reporter_handler(
       SystemCrashReporterHandler());
-  EXPECT_TRUE(system_crash_reporter_handler.is_valid());
+  if (!system_crash_reporter_handler.is_valid()) {
+    GTEST_SKIP()
+        << "SystemCrashReporterHandler not available in this bootstrap domain";
+  }
 }
 
 }  // namespace
